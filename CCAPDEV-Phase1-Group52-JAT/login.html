@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lab O' Mine | Login & Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+ <style>
+    body {
+        background: linear-gradient(rgba(46, 139, 87, 0.65), rgba(46, 139, 87, 0.65)), 
+                    url('IMG_20180502_130146.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        height: 100vh;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center; 
+        width: 100%;
+        max-width: 800px; 
+    }
+
+    .main-title {
+        font-size: 6rem;
+        font-weight: 900;
+        color: white;
+        text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.6);
+        margin-bottom: 0;
+        line-height: 1.2;
+        white-space: nowrap; 
+        text-align: center;
+    }
+
+    .sub-title {
+        font-size: 1.6rem;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 2rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.98);
+        width: 100%;
+        max-width: 420px; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        text-align: left;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .toggle-btn {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: none;
+        color: #6c757d;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h1 class="main-title">Lab O' Mine</h1>
+        <p class="sub-title">Computer Lab Reservation System</p>
+
+        <div class="card p-4 shadow-lg text-start">
+            <ul class="nav nav-tabs mb-4" id="authTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#loginView" type="button" role="tab">Login</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#registerView" type="button" role="tab">Register</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="authTabsContent">
+                <div class="tab-pane fade show active" id="loginView" role="tabpanel">
+                    <form onsubmit="window.location.href='index.html'; return false;">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">DLSU Email</label>
+                            <input type="email" class="form-control" placeholder="juan_delacruz@dlsu.edu.ph" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required>
+                                <button type="button" class="toggle-btn" onclick="toggleVisibility('loginPass', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="rem">
+                            <label class="form-check-label small" for="rem">Remember me</label>
+                        </div>
+                        <button class="btn btn-success w-100">Sign In</button>
+                    </form>
+                </div>
+
+                <div class="tab-pane fade" id="registerView" role="tabpanel">
+                    <form onsubmit="alert('Registration successful!'); window.location.href='login.html'; return false;">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" class="form-control" placeholder="Full Name" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">DLSU Email</label>
+                            <input type="email" class="form-control" placeholder="DLSU Email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Create Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="regPass" class="form-control" placeholder="••••••••" required>
+                                <button type="button" class="toggle-btn" onclick="toggleVisibility('regPass', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleVisibility(id, btn) {
+            const field = document.getElementById(id);
+            const icon = btn.querySelector('i');
+            
+            if (field.type === "password") {
+                field.type = "text";
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                field.type = "password";
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+    </script>
+</body>
+</html>

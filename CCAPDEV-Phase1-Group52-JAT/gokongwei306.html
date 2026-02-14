@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Velasco - Lab O' Mine</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        
+        <div class="container">
+            <h2>Gokongwei 306</h2>
+            <a href="reserve.html" class="btn btn-dark mt-3">Back</a>
+        </div>
+
+        <hr>
+
+        <table class="table table-striped table-bordered mt-3">
+            <thead class="table-dark">
+                <tr id="dateRow">
+                    <th>Timeslots</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-table">
+                
+            </tbody>
+        </table>
+
+        <script>
+
+            //This just populates the top row for the dates staring from today
+            const dateRow = document.getElementById("dateRow");
+
+            let presentDay = new Date();
+            presentDay.setHours(0, 0, 0, 0);
+
+            let theNextSevenDays= [];
+            theNextSevenDays.push(presentDay);
+
+            for(let i = 1; i <= 7; i++){
+
+                let holder = new Date(presentDay);
+
+                holder.setDate(holder.getDate() + i);
+                theNextSevenDays.push(holder);
+            }
+
+            for(let day of theNextSevenDays){
+                const header = document.createElement("th");
+
+                header.textContent = day.toLocaleDateString("en-US", {weekday: "long", month: "short", day: "numeric"});
+                dateRow.appendChild(header);
+            }
+
+            //These are just the time markers for the slots
+            const tableBody = document.getElementById("schedule-table");
+
+            function timeCrunch(minutes){       //I'm not changing its name
+
+                let hour = Math.floor(minutes / 60);
+                let remainingMinutes = minutes % 60;
+
+                let meridiem = "";
+
+                if(hour <12){
+                    meridiem = "AM";
+                } else{
+                    meridiem = "PM";
+                }
+
+                hour = hour % 12;     //To account for Post Meridiem
+
+                if(hour === 0){
+                    hour = 12;        //Because of Midnight
+                }
+
+                return `${hour}:${String(remainingMinutes).padStart(2, "0")} ${meridiem}`;
+            }
+
+            const takenSlot = new Set();
+            let slotIndex = 0;
+            let pendingStart = null;
+
+            //NOTE: Remove this when we can ACTUALLY work with a database
+            const buttonGrid = Array.from({ length: theNextSevenDays.length}, () => Array(20).fill(null));
+
+            function paintButton(dayIndex, slotIndex){
+
+                const button = buttonGrid[dayIndex][slotIndex];
+                const key = `${dayIndex}|${slotIndex}`;
+                const isReserved = takenSlot.has(key);
+
+                button.classList.remove("btn-warning");
+
+                if(isReserved){
+                    button.textContent = "Reserved";
+                }else{
+                    button.textContent = "Reserve";
+                }
+
+                button.classList.toggle("btn-outline-secondary", !isReserved);
+                button.classList.toggle("btn-success", isReserved);
+            }
+
+            function repaintAll(){
+                for (let d = 0; d < theNextSevenDays.length; d++){
+                    for (let s = 0; s < 20; s++){
+                        paintButton(d, s);
+                    }
+                } 
+            }
+
+            for(let time = 450; time < 1050; time += 30){
+
+                const currentSlotIndex = slotIndex;
+
+                const slotRow = document.createElement("tr");
+                const slotTime = document.createElement("td");
+
+                slotTime.textContent = `${timeCrunch(time)} - ${timeCrunch(time + 30)}`;
+                slotRow.appendChild(slotTime);
+
+                //These are just the button sections
+                for(let dayIndex = 0; dayIndex < theNextSevenDays.length; dayIndex++){
+
+                    const buttonCell = document.createElement("td");
+                    const reserveButton = document.createElement("button");
+
+                    reserveButton.className = "btn btn-sm btn-outline-secondary";
+                    reserveButton.textContent = "Reserve";
+                    buttonGrid[dayIndex][currentSlotIndex] = reserveButton;
+
+                    reserveButton.addEventListener("click", () => {
+                        const key = `${dayIndex}|${currentSlotIndex}`;
+
+                        //If user unreserves a slot
+                        if(takenSlot.has(key)){
+
+                            pendingStart = null;
+                            repaintAll();
+                            
+                            const ok = confirm("Unreserve this time slot?");
+
+                            if(ok){
+                                takenSlot.delete(key);
+                                paintButton(dayIndex, currentSlotIndex);
+                            }
+                            return;
+                        }
+
+                        if(pendingStart === null){
+                            pendingStart = { dayIndex: dayIndex, slotIndex: currentSlotIndex };
+                            reserveButton.classList.remove("btn-outline-secondary");
+                            reserveButton.classList.add("btn-warning");
+                            return;
+                        }
+
+                        if(pendingStart.dayIndex !== dayIndex){
+                            alert("Start and end must be on the same day.");
+                            pendingStart = null;
+                            repaintAll();
+                            return;
+                        }
+
+                        let startingButton = Math.min(pendingStart.slotIndex, currentSlotIndex);
+                        let endingButton = Math.max(pendingStart.slotIndex, currentSlotIndex);
+                        let difference = endingButton - startingButton + 1;
+
+                        //We agreed on a 1 hour minimum reservation
+                        if(difference < 2){
+                            alert("Minimum reservation is 1 hour (2 slots).");
+                            pendingStart = null;
+                            repaintAll();
+                            return;
+                        }
+
+                        for (let s = startingButton; s <= endingButton; s++){
+                            if(takenSlot.has(`${dayIndex}|${s}`)){
+                                alert("That range includes an already reserved slot.");
+                                pendingStart = null;
+                                repaintAll();
+                                return;
+                            }
+                        }
+
+                        //Reserve an entire range
+                        for (let s = startingButton; s <= endingButton; s++){
+                            takenSlot.add(`${dayIndex}|${s}`);
+                        }
+
+                        pendingStart = null;
+                        repaintAll();
+                    });
+
+                    buttonCell.appendChild(reserveButton);
+                    slotRow.appendChild(buttonCell);
+                }
+                
+                slotIndex++;
+                tableBody.appendChild(slotRow);
+            }
+
+            repaintAll();
+
+          </script>
+    </body>
+</html>
