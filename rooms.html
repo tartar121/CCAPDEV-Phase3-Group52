@@ -1,0 +1,265 @@
+<script>
+
+
+// ROLE + USER SETUP
+
+
+const params = new URLSearchParams(window.location.search);
+const ROOM_NAME = params.get("room") || "Unknown Room";
+
+document.getElementById("roomTitle").textContent = ROOM_NAME;
+
+const isAdmin = localStorage.getItem("isAdmin") === "true";
+const currentUser = localStorage.getItem("currentUser");
+
+let reservations = JSON.parse(localStorage.getItem("reservations")) || [];
+
+const dateRow = document.getElementById("dateRow");
+const tableBody = document.getElementById("schedule-table");
+
+
+
+// GENERATE DATES
+
+let today = new Date();
+today.setHours(0,0,0,0);
+
+let days = [];
+
+for (let i = 0; i <= 7; i++) {
+    let d = new Date(today);
+    d.setDate(d.getDate() + i);
+    days.push(d);
+
+    const th = document.createElement("th");
+    th.textContent = d.toLocaleDateString();
+    dateRow.appendChild(th);
+}
+
+
+
+// TIME FORMAT
+
+function formatTime(minutes) {
+    let hour = Math.floor(minutes / 60);
+    let min = minutes % 60;
+    let mer = hour < 12 ? "AM" : "PM";
+    hour = hour % 12 || 12;
+    return `${hour}:${String(min).padStart(2,"0")} ${mer}`;
+}
+
+
+
+// SAVE FUNCTION
+
+function saveReservations() {
+    localStorage.setItem("reservations", JSON.stringify(reservations));
+}
+
+
+// CHECK IF SLOT RESERVED
+
+
+function getReservation(dayIndex, slotIndex) {
+    return reservations.find(r =>
+        r.room === ROOM_NAME &&
+        r.dayIndex == dayIndex &&
+        r.slotIndex == slotIndex
+    );
+}
+
+
+
+
+function repaint() {
+    document.querySelectorAll("button[data-slot]").forEach(btn => {
+
+        const d = btn.dataset.day;
+        const s = btn.dataset.slot;
+
+        const res = getReservation(d, s);
+
+        btn.classList.remove("btn-success", "btn-outline-secondary");
+
+        if (res) {
+            btn.textContent = "Reserved";
+            btn.classList.add("btn-success");
+        } else {
+            btn.textContent = "Reserve";
+            btn.classList.add("btn-outline-secondary");
+        }
+    });
+}
+
+
+
+// TABLE
+
+
+let slotIndex = 0;
+
+for (let time = 450; time < 1050; time += 30) {
+
+    const row = document.createElement("tr");
+    const timeCell = document.createElement("td");
+    timeCell.textContent = `${formatTime(time)} - ${formatTime(time+30)}`;
+    row.appendChild(timeCell);
+
+    for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+
+        const td = document.createElement("td");
+        const btn = document.createElement("button");
+
+        btn.className = "btn btn-sm btn-outline-secondary";
+        btn.dataset.day = dayIndex;
+        btn.dataset.slot = slotIndex;
+        btn.dataset.time = time;
+
+        btn.addEventListener("click", () =>
+            handleClick(dayIndex, slotIndex, time)
+        );
+
+        td.appendChild(btn);
+        row.appendChild(td);
+    }
+
+    tableBody.appendChild(row);
+    slotIndex++;
+}
+
+
+
+// ADMIN + STUDENT CLICK HANDLER
+
+
+function handleClick(dayIndex, slotIndex, time) {
+
+    const existing = getReservation(dayIndex, slotIndex);
+
+    // ADMIN MODE
+
+    if (isAdmin) {
+
+        const choice = prompt(
+            "ADMIN MODE:\n" +
+            "1 - Book Walk-in\n" +
+            "2 - Cancel Reservation\n" +
+            "3 - Mark Checked-In\n" +
+            "4 - Move Reservation"
+        );
+
+        // CREATE (Walk-in)
+        if (choice === "1") {
+
+            if (existing) {
+                alert("Slot already reserved.");
+                return;
+            }
+
+            reservations.push({
+                id: Date.now(),
+                room: ROOM_NAME,
+                dayIndex,
+                slotIndex,
+                startTime: new Date(days[dayIndex].getTime() + time*60000),
+                user: "Walk-in",
+                checkedIn: false
+            });
+
+            saveReservations();
+            repaint();
+            return;
+        }
+
+        // DELETE
+        if (choice === "2" && existing) {
+            reservations = reservations.filter(r => r.id !== existing.id);
+            saveReservations();
+            repaint();
+            return;
+        }
+
+        // UPDATE (Check-In)
+        if (choice === "3" && existing) {
+            existing.checkedIn = true;
+            saveReservations();
+            alert("Marked as checked-in.");
+            return;
+        }
+
+        // UPDATE (Move Reservation)
+        if (choice === "4" && existing) {
+
+            const newDay = prompt("Enter new day index (0-7):");
+            const newSlot = prompt("Enter new slot index:");
+
+            existing.dayIndex = parseInt(newDay);
+            existing.slotIndex = parseInt(newSlot);
+
+            existing.startTime =
+                new Date(days[newDay].getTime() +
+                existing.slotIndex * 30 * 60000);
+
+            saveReservations();
+            repaint();
+            alert("Reservation moved.");
+            return;
+        }
+
+        return;
+    }
+
+
+    // STUDENT MODE
+
+    if (existing) {
+        alert("Slot already reserved.");
+        return;
+    }
+
+    reservations.push({
+        id: Date.now(),
+        room: ROOM_NAME,
+        dayIndex,
+        slotIndex,
+        startTime: new Date(days[dayIndex].getTime() + time*60000),
+        user: currentUser,
+        checkedIn: false
+    });
+
+    saveReservations();
+    repaint();
+}
+
+
+// AUTO NO-SHOW CANCEL
+
+
+setInterval(() => {
+
+    const now = new Date();
+
+    reservations = reservations.filter(res => {
+
+        if (!res.checkedIn) {
+
+            const diff = (now - new Date(res.startTime)) / 60000;
+
+            // 10 minutes
+            if (diff >= 10) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    saveReservations();
+    repaint();
+
+}, 60000); // check every minute
+
+
+repaint();
+
+</script>
