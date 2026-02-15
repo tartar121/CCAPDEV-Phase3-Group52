@@ -35,5 +35,5 @@ The following accounts are hardcoded to demonstrate different role-based feature
 - Visual Assets: Appropriate graphics, including a custom pixel-art (made in Canva) and Bootstrap Icons, are used to represent lab status.
 
 ## 📁 Submission Guidelines
--File Format: CCAPDEV-Phase1-Group52.zip
--Collaboration: Students collaborated through the group's GitHub repository.
+- File Format: CCAPDEV-Phase1-Group52.zip
+- Collaboration: Students collaborated through the group's GitHub repository.
