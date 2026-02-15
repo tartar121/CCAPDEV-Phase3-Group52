@@ -3,244 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <title>Lab O' Mine | Login & Register</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
+    <link rel="icon" type="image/png" href="icon.png">
     <style>
-        body {
-            background: linear-gradient(rgba(46,139,87,0.7), rgba(46,139,87,0.7)),
-                        url('IMG_20180502_130146.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', sans-serif;
+        body { 
+            background: linear-gradient(rgba(46,139,87,0.65), rgba(46,139,87,0.65)), url('IMG_20180502_130146.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed; 
+            height: 100vh; 
+            margin: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: 'Segoe UI', sans-serif; 
         }
-
-        .login-container {
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-        }
-
-        .main-title {
-            font-size: 4.5rem;
-            font-weight: 900;
-            color: white;
-            text-shadow: 3px 3px 15px rgba(0,0,0,0.6);
-        }
-
-        .sub-title {
-            font-size: 1.2rem;
-            color: white;
-            margin-bottom: 2rem;
-        }
-
-        .card {
-            border-radius: 20px;
-            background: rgba(255,255,255,0.97);
-        }
-
-        .password-wrapper {
-            position: relative;
-        }
-
-        .toggle-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            border: none;
-            background: none;
-        }
+        .login-container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 800px; }
+        .main-title { font-size: 6rem; font-weight: 900; color: white; text-shadow: 3px 3px 15px rgba(0,0,0,0.6); margin-bottom: 0; line-height: 1.2; }
+        .sub-title { font-size: 1.6rem; color: rgba(255, 255, 255, 0.95); margin-bottom: 2rem; font-weight: 400; letter-spacing: 1px; }
+        .card { border: none; border-radius: 20px; background: rgba(255,255,255,0.98); width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: left; }
+        .password-wrapper { position: relative; }
+        .toggle-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #6c757d; cursor: pointer; }
     </style>
 </head>
-
 <body>
 
 <div class="login-container">
-
     <h1 class="main-title">Lab O' Mine</h1>
     <p class="sub-title">Computer Lab Reservation System</p>
 
     <div class="card p-4 shadow-lg">
-
-        <ul class="nav nav-tabs mb-4">
-            <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#loginView">
-                    Login
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#registerView">
-                    Register
-                </button>
-            </li>
+        <ul class="nav nav-tabs mb-4" id="authTabs">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#loginView">Login</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#registerView">Register</button></li>
         </ul>
 
         <div class="tab-content">
-
-            <!-- LOGIN TAB -->
             <div class="tab-pane fade show active" id="loginView">
-
                 <form onsubmit="return loginUser(event)">
-
-                    <div class="mb-3 text-start">
+                    <div class="mb-3">
                         <label class="form-label small fw-bold">DLSU Email</label>
-                        <input type="email" id="loginEmail"
-                               class="form-control"
-                               placeholder="juan_delacruz@dlsu.edu.ph"
-                               required>
+                        <input type="email" id="loginEmail" class="form-control" placeholder="juan_delacruz@dlsu.edu.ph" required>
                     </div>
-
-                    <div class="mb-3 text-start">
+                    <div class="mb-3">
                         <label class="form-label small fw-bold">Password</label>
                         <div class="password-wrapper">
-                            <input type="password"
-                                   id="loginPass"
-                                   class="form-control"
-                                   required>
-                            <button type="button"
-                                    class="toggle-btn"
-                                    onclick="toggleVisibility('loginPass', this)">
-                                <i class="bi bi-eye"></i>
-                            </button>
+                            <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="toggle-btn" onclick="toggleVisibility('loginPass', this)"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
-
-                    <div class="form-check text-start mb-3">
+                    <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="rememberMe">
-                        <label class="form-check-label small">
-                            Remember me
-                        </label>
+                        <label class="form-check-label small" for="rememberMe">Remember me</label>
                     </div>
-
-                    <button class="btn btn-success w-100">
-                        Sign In
-                    </button>
-
+                    <button class="btn btn-success w-100">Sign In</button>
                 </form>
-
             </div>
 
-            <!-- REGISTER TAB -->
             <div class="tab-pane fade" id="registerView">
-
                 <form onsubmit="return registerUser(event)">
-
-                    <div class="mb-2 text-start">
+                    <div class="mb-2">
                         <label class="form-label small fw-bold">Full Name</label>
-                        <input type="text" class="form-control" required>
+                        <input type="text" id="regName" class="form-control" placeholder="Full Name" required>
                     </div>
-
-                    <div class="mb-2 text-start">
+                    <div class="mb-2">
                         <label class="form-label small fw-bold">DLSU Email</label>
-                        <input type="email" class="form-control" required>
+                        <input type="email" id="regEmail" class="form-control" placeholder="tara_uy@dlsu.edu.ph" required>
                     </div>
-
-                    <div class="mb-3 text-start">
+                    <div class="mb-3">
                         <label class="form-label small fw-bold">Create Password</label>
                         <div class="password-wrapper">
-                            <input type="password"
-                                   id="regPass"
-                                   class="form-control"
-                                   required>
-                            <button type="button"
-                                    class="toggle-btn"
-                                    onclick="toggleVisibility('regPass', this)">
-                                <i class="bi bi-eye"></i>
-                            </button>
+                            <input type="password" id="regPass" class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="toggle-btn" onclick="toggleVisibility('regPass', this)"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
-
-                    <button class="btn btn-primary w-100">
-                        Create Account
-                    </button>
-
+                    <button class="btn btn-primary w-100">Create Account</button>
                 </form>
-
             </div>
-
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-
-// 🔹 Toggle password visibility
 function toggleVisibility(id, btn) {
     const field = document.getElementById(id);
     const icon = btn.querySelector("i");
-
-    if (field.type === "password") {
-        field.type = "text";
-        icon.classList.replace("bi-eye", "bi-eye-slash");
-    } else {
-        field.type = "password";
-        icon.classList.replace("bi-eye-slash", "bi-eye");
-    }
+    if (field.type === "password") { field.type = "text"; icon.classList.replace("bi-eye", "bi-eye-slash"); }
+    else { field.type = "password"; icon.classList.replace("bi-eye-slash", "bi-eye"); }
 }
 
-
-// 🔥 LOGIN FUNCTION
 function loginUser(e) {
     e.preventDefault();
-
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPass").value.trim();
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+    const passwordInput = document.getElementById("loginPass").value;
     const remember = document.getElementById("rememberMe").checked;
 
-    // 🔐 ADMIN ACCOUNT
-    if (email === "admin@dlsu.edu.ph" && password === "admin123") {
+    let users = JSON.parse(localStorage.getItem("allUsers")) || [];
+    
+    // Check if the user exists
+    const userObj = users.find(u => u.email === email);
 
-        localStorage.setItem("isAdmin", "true");
-        localStorage.setItem("currentUser", email);
-
-        if (remember) {
-            localStorage.setItem("rememberUser", email);
-        }
-
-        window.location.href = "index.html";
+    if (!userObj) {
+        alert("Account not found. Please register first.");
         return false;
     }
 
-    // 🎓 STUDENT ACCOUNT
-    localStorage.setItem("isAdmin", "false");
+    // Verify Password
+    if (userObj.password !== passwordInput) {
+        alert("Incorrect password. Please try again.");
+        return false;
+    }
+
+    // Assign Role
+    const namePart = email.split('@')[0];
+    if (email === "admin@dlsu.edu.ph") { 
+        localStorage.setItem("userRole", "admin"); 
+    } else if (namePart.includes('.') && !namePart.includes('_')) { 
+        localStorage.setItem("userRole", "teacher"); 
+    } else { 
+        localStorage.setItem("userRole", "student"); 
+    }
+
     localStorage.setItem("currentUser", email);
 
-    if (remember) {
-        localStorage.setItem("rememberUser", email);
-    }
+    if (remember) { localStorage.setItem("rememberUser", email); } 
+    else { localStorage.removeItem("rememberUser"); }
 
     window.location.href = "index.html";
     return false;
 }
 
-
-// 🔹 REGISTER (Simulated)
 function registerUser(e) {
     e.preventDefault();
-    alert("Registration successful! You may now log in.");
+    const email = document.getElementById("regEmail").value.trim().toLowerCase();
+    const name = document.getElementById("regName").value.trim();
+    const password = document.getElementById("regPass").value;
+    
+    let users = JSON.parse(localStorage.getItem("allUsers")) || [];
+    if (users.find(u => u.email === email)) {
+        alert("This email is already registered.");
+        return false;
+    }
+
+    users.push({ email, name, password });
+    localStorage.setItem("allUsers", JSON.stringify(users));
+    alert("Registration successful! Switching to login...");
+
+    // Auto-switch to Login Tab
+    const firstTabEl = document.querySelector('#authTabs li:first-child button');
+    const firstTab = new bootstrap.Tab(firstTabEl);
+    firstTab.show();
+    return false;
 }
 
-
-// 🔹 Auto-fill remembered user
 window.onload = function() {
-    const remembered = localStorage.getItem("rememberUser");
-    if (remembered) {
-        document.getElementById("loginEmail").value = remembered;
+    const rememberedEmail = localStorage.getItem("rememberUser");
+
+    if (!sessionStorage.getItem('sessionStarted')) {
+        localStorage.clear(); 
+        sessionStorage.setItem('sessionStarted', 'true');
+        
+        if (rememberedEmail) { 
+            localStorage.setItem("rememberUser", rememberedEmail); 
+        }
+
+        // Call the external injection functions
+        injectSampleUsers();
+        injectSampleBios();
+        injectSampleReservations();
+    }
+
+    if (rememberedEmail) {
+        document.getElementById("loginEmail").value = rememberedEmail;
         document.getElementById("rememberMe").checked = true;
     }
 };
 
-</script>
+function injectSampleUsers() { 
+    // Sample Users
+    const sampleUsers = [
+        { email: 'oliver.berris@dlsu.edu.ph', name: 'Oliver Berris', password: '123' },
+        { email: 'tara_uy@dlsu.edu.ph', name: 'Tara Uy', password: '456' },
+        { email: 'ram_liwanag@dlsu.edu.ph', name: 'Ram Liwanag', password: '789' },
+        { email: 'dale_balila@dlsu.edu.ph', name: 'Dale Balila', password: 'abc' },
+        { email: 'john_teoxon@dlsu.edu.ph', name: 'John Teoxon', password: 'def' },
+        { email: 'admin@dlsu.edu.ph', name: 'Admin Account', password: 'admin' }
+    ];
+    localStorage.setItem("allUsers", JSON.stringify(sampleUsers));
+}
 
+function injectSampleBios() {
+    // Sample Bios
+    const sampleBios = {
+        'oliver.berris@dlsu.edu.ph': "Computer Science Faculty member who loves teaching.",
+        'tara_uy@dlsu.edu.ph': "Avid Gamer and Persona Series Lover.",
+        'ram_liwanag@dlsu.edu.ph': "Loves technology, programming, and playing Honkai: Star Rail.",
+        'dale_balila@dlsu.edu.ph': "CCS Student and part-time sleeper.",
+        'john_teoxon@dlsu.edu.ph': "Enjoys watching movies and exploring new cafes around the city."
+    };
+
+    Object.keys(sampleBios).forEach(email => {
+        localStorage.setItem('bio_' + email, sampleBios[email]);
+    });
+}
+
+function injectSampleReservations() {
+    // Sample Reservations
+    let reservations = JSON.parse(localStorage.getItem("reservations")) || [];
+    if (reservations.length === 0) {
+        const today = new Date().toLocaleDateString();
+        const initialRes = [
+            { id: 101, room: "Gokongwei 302", dayIndex: 0, slotIndex: 2, date: today, slotTime: "08:30 AM - 09:00 AM", user: "oliver.berris@dlsu.edu.ph", userRole: "teacher", isAnonymous: false },
+            { id: 101.5, room: "Gokongwei 302", dayIndex: 0, slotIndex: 3, date: today, slotTime: "09:00 AM - 09:30 AM", user: "oliver.berris@dlsu.edu.ph", userRole: "teacher", isAnonymous: false },
+            { id: 102, room: "Velasco 211", dayIndex: 0, slotIndex: 5, date: today, slotTime: "10:00 AM - 10:30 AM", user: "tara_uy@dlsu.edu.ph", userRole: "student", isAnonymous: true },
+            { id: 102.5, room: "Velasco 211", dayIndex: 0, slotIndex: 6, date: today, slotTime: "10:30 AM - 11:00 AM", user: "tara_uy@dlsu.edu.ph", userRole: "student", isAnonymous: true },
+            { id: 103, room: "Andrew 1401", dayIndex: 0, slotIndex: 10, date: today, slotTime: "12:30 PM - 01:00 PM", user: "ram_liwanag@dlsu.edu.ph", userRole: "student", isAnonymous: false },
+            { id: 103.5, room: "Andrew 1401", dayIndex: 0, slotIndex: 11, date: today, slotTime: "01:00 PM - 01:30 PM", user: "ram_liwanag@dlsu.edu.ph", userRole: "student", isAnonymous: false },
+            { id: 104, room: "Gokongwei 306", dayIndex: 2, slotIndex: 4, date: today, slotTime: "09:30 AM - 10:00 AM", user: "dale_balila@dlsu.edu.ph", userRole: "student", isAnonymous: false },
+            { id: 104.5, room: "Gokongwei 306", dayIndex: 2, slotIndex: 5, date: today, slotTime: "10:00 AM - 10:30 AM", user: "dale_balila@dlsu.edu.ph", userRole: "student", isAnonymous: false },
+            { id: 105, room: "Henry Sy 4th Floor", dayIndex: 0, slotIndex: 1, date: today, slotTime: "08:00 AM - 08:30 AM", user: "john_teoxon@dlsu.edu.ph", userRole: "student", isAnonymous: false },
+            { id: 105.5, room: "Henry Sy 4th Floor", dayIndex: 0, slotIndex: 2, date: today, slotTime: "08:30 AM - 09:00 AM", user: "john_teoxon@dlsu.edu.ph", userRole: "student", isAnonymous: false }
+        ];
+        localStorage.setItem("reservations", JSON.stringify(initialRes));
+    }
+}
+</script>
 </body>
 </html>
