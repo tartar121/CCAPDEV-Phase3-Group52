@@ -1,265 +1,287 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room Reservation - Lab O' Mine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="icon" type="image/png" href="icon.png">
+    <style>
+        .nav-green { background-color: #2e8b57 !important; }
+        .table-responsive { max-height: 70vh; overflow-y: auto; }
+        .btn-available { background-color: #ffffff; color: #2e8b57; border: 1px solid #2e8b57; }
+        .btn-selected { background-color: #ffc107 !important; color: #000 !important; border: 1px solid #ffc107; } 
+        .btn-reserved { background-color: #842029 !important; color: white !important; cursor: pointer; } 
+        .btn-faculty { background-color: #0d6efd !important; color: white !important; } 
+        .btn-checkedin { background-color: #198754 !important; color: white !important; border: 1px solid #198754; }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark nav-green">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Lab O' Mine</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="index.html">Home</a>
+                <a class="nav-link active" href="rooms.html">View Labs</a>
+                <a class="nav-link" href="profile.html">My Profile</a>
+                <a class="nav-link text-warning" href="login.html" onclick="localStorage.removeItem('currentUser'); localStorage.removeItem('userRole');">Sign Out</a>
+            </div>
+        </div>
+    </nav>
 
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 id="roomTitle">Laboratory</h2>
+            <div>
+                <button id="reserveBtn" class="btn btn-success shadow-sm" style="display:none;" onclick="finalizeBooking()">Confirm Reservation</button>
+                <a href="index.html" class="btn btn-outline-secondary ms-2">Back</a>
+            </div>
+        </div>
 
-// ROLE + USER SETUP
+        <div class="table-responsive bg-white shadow-sm rounded">
+            <table class="table table-bordered text-center align-middle mb-0">
+                <thead class="table-dark sticky-top">
+                    <tr id="dateRow">
+                        <th>Timeslots</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleTable"></tbody>
+            </table>
+        </div>
+    </div>
 
+    <div class="modal fade" id="anonModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg p-3">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Reservation Privacy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to reserve these slots anonymously?</p>
+                </div>
+                <div class="modal-footer border-0 d-flex gap-2">
+                    <button class="btn btn-success flex-grow-1" onclick="processBooking(true)">Yes, Anonymous</button>
+                    <button class="btn btn-outline-secondary flex-grow-1" onclick="processBooking(false)">No, Show Name</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-const params = new URLSearchParams(window.location.search);
-const ROOM_NAME = params.get("room") || "Unknown Room";
+    <!-- Legend -->
+    <div class="mt-3 d-flex justify-content-center gap-3">
+        <span><span class="badge btn-available border text-dark">White</span> Available</span>
+        <span><span class="badge bg-warning text-dark">Yellow</span> Selected</span>
+        <span><span class="badge bg-danger">Red</span> Reserved</span>
+        <span><span class="badge bg-primary">Blue</span> Faculty</span>
+        <span><span class="badge bg-success">Green</span> Checked-in</span>
+    </div>
 
-document.getElementById("roomTitle").textContent = ROOM_NAME;
+    <script>
+        // Setup Parameters and Data
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedDate = urlParams.get("date"); // From Search & Filter
+        const ROOM_NAME = urlParams.get("lab") || "Gokongwei 302";
+        $('#roomTitle').text(ROOM_NAME);
 
-const isAdmin = localStorage.getItem("isAdmin") === "true";
-const currentUser = localStorage.getItem("currentUser");
+        const userRole = localStorage.getItem("userRole") || "student";
+        const currentUser = localStorage.getItem("currentUser") || "Guest";
+        let reservations = JSON.parse(localStorage.getItem("reservations")) || [];
+        let pendingSelection = []; 
 
-let reservations = JSON.parse(localStorage.getItem("reservations")) || [];
+        // Generate Dates (Handling Search Filter)
+        let days = [];
+        const dateRow = $('#dateRow');
+        dateRow.html('<th>Timeslots</th>'); 
 
-const dateRow = document.getElementById("dateRow");
-const tableBody = document.getElementById("schedule-table");
-
-
-
-// GENERATE DATES
-
-let today = new Date();
-today.setHours(0,0,0,0);
-
-let days = [];
-
-for (let i = 0; i <= 7; i++) {
-    let d = new Date(today);
-    d.setDate(d.getDate() + i);
-    days.push(d);
-
-    const th = document.createElement("th");
-    th.textContent = d.toLocaleDateString();
-    dateRow.appendChild(th);
-}
-
-
-
-// TIME FORMAT
-
-function formatTime(minutes) {
-    let hour = Math.floor(minutes / 60);
-    let min = minutes % 60;
-    let mer = hour < 12 ? "AM" : "PM";
-    hour = hour % 12 || 12;
-    return `${hour}:${String(min).padStart(2,"0")} ${mer}`;
-}
-
-
-
-// SAVE FUNCTION
-
-function saveReservations() {
-    localStorage.setItem("reservations", JSON.stringify(reservations));
-}
-
-
-// CHECK IF SLOT RESERVED
-
-
-function getReservation(dayIndex, slotIndex) {
-    return reservations.find(r =>
-        r.room === ROOM_NAME &&
-        r.dayIndex == dayIndex &&
-        r.slotIndex == slotIndex
-    );
-}
-
-
-
-
-function repaint() {
-    document.querySelectorAll("button[data-slot]").forEach(btn => {
-
-        const d = btn.dataset.day;
-        const s = btn.dataset.slot;
-
-        const res = getReservation(d, s);
-
-        btn.classList.remove("btn-success", "btn-outline-secondary");
-
-        if (res) {
-            btn.textContent = "Reserved";
-            btn.classList.add("btn-success");
+        if (requestedDate) {
+            // Only show the ONE date requested in search
+            let d = new Date(requestedDate);
+            days.push(d);
+            dateRow.append(`<th>${d.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' })}</th>`);
         } else {
-            btn.textContent = "Reserve";
-            btn.classList.add("btn-outline-secondary");
+            // Default: Show next 7 days
+            for (let i = 0; i <= 7; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                days.push(d);
+                dateRow.append(`<th>${d.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' })}</th>`);
+            }
         }
-    });
-}
 
+        function formatTime(m) {
+            let h = Math.floor(m / 60), mm = m % 60, mer = h < 12 ? "AM" : "PM";
+            h = h % 12 || 12;
+            return `${h}:${String(mm).padStart(2, "0")} ${mer}`;
+        }
 
+        // Generate Grid (Rows and Columns)
+        let sIdx = 0;
+        for (let t = 450; t < 1050; t += 30) {
+            let row = `<tr><td class="fw-bold small">${formatTime(t)} - ${formatTime(t + 30)}</td>`;
+            for (let d = 0; d < days.length; d++) {
+                row += `<td><button class="btn btn-sm btn-available w-100" data-day="${d}" data-slot="${sIdx}" data-time="${t}" onclick="handleClick(this, ${d}, ${sIdx}, ${t})">Reserve</button></td>`;
+            }
+            $('#scheduleTable').append(row + '</tr>');
+            sIdx++;
+        }
 
-// TABLE
+        function repaint() {
+            document.querySelectorAll("button[data-slot]").forEach(btn => {
+                const d = btn.dataset.day, s = btn.dataset.slot;
+                const dateString = days[d].toLocaleDateString();
+                const res = reservations.find(r => r.room === ROOM_NAME && r.date === dateString && r.slotIndex == s);
 
+                // Remove ALL possible state classes
+                $(btn).removeClass("btn-reserved btn-faculty btn-available btn-selected btn-checkedin opacity-75");
+        
+                if (res) {
+                    let statusText = "Reserved";
+                    let btnClass = "btn-reserved";
 
-let slotIndex = 0;
+                    // Determine Priority Color/Text
+                    if (res.userRole === 'teacher') {
+                        statusText = "FACULTY";
+                        btnClass = "btn-faculty";
+                    }
 
-for (let time = 450; time < 1050; time += 30) {
+                    // OVERRIDE if Checked-in (Makes Checked-in take visual priority)
+                    if (res.checkedIn) {
+                        statusText = "CHECKED-IN";
+                        btnClass = "btn-checkedin";
+                    }
 
-    const row = document.createElement("tr");
-    const timeCell = document.createElement("td");
-    timeCell.textContent = `${formatTime(time)} - ${formatTime(time+30)}`;
-    row.appendChild(timeCell);
+                    btn.textContent = statusText;
+                    $(btn).addClass(btnClass);
 
-    for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+                    // Admin & Visual Aid
+                    if (userRole === 'admin') {
+                        btn.title = `User: ${res.user} | Status: ${res.checkedIn ? 'Present' : 'Pending'}`;
+                        if (!res.checkedIn) $(btn).addClass("opacity-75"); // Fades no-shows
+                    } else {
+                        btn.title = `Status: ${res.displayName}`;
+                    }
 
-        const td = document.createElement("td");
-        const btn = document.createElement("button");
+                } else if (pendingSelection.find(p => p.d == d && p.s == s)) {
+                    btn.textContent = "Selected";
+                    $(btn).addClass("btn-selected");
+                } else {
+                    btn.textContent = "Reserve";
+                    $(btn).addClass("btn-available");
+                }
+            });
+        }
 
-        btn.className = "btn btn-sm btn-outline-secondary";
-        btn.dataset.day = dayIndex;
-        btn.dataset.slot = slotIndex;
-        btn.dataset.time = time;
+        function handleClick(btn, d, s, t) {
+            const dateString = days[d].toLocaleDateString();
+            const existing = reservations.find(r => r.room === ROOM_NAME && r.date === dateString && r.slotIndex == s);
 
-        btn.addEventListener("click", () =>
-            handleClick(dayIndex, slotIndex, time)
-        );
-
-        td.appendChild(btn);
-        row.appendChild(td);
-    }
-
-    tableBody.appendChild(row);
-    slotIndex++;
-}
-
-
-
-// ADMIN + STUDENT CLICK HANDLER
-
-
-function handleClick(dayIndex, slotIndex, time) {
-
-    const existing = getReservation(dayIndex, slotIndex);
-
-    // ADMIN MODE
-
-    if (isAdmin) {
-
-        const choice = prompt(
-            "ADMIN MODE:\n" +
-            "1 - Book Walk-in\n" +
-            "2 - Cancel Reservation\n" +
-            "3 - Mark Checked-In\n" +
-            "4 - Move Reservation"
-        );
-
-        // CREATE (Walk-in)
-        if (choice === "1") {
-
-            if (existing) {
-                alert("Slot already reserved.");
+            if (userRole === 'admin') {
+                const opt = prompt("TECHNICIAN TOOLS:\n1 - Walk-in\n2 - Mark as Checked-in\n3 - No-show / Cancel\n(Enter option number)");
+    
+                if (opt === "1") { // CREATE (Walk-in)
+                if (existing) { alert("Slot already occupied."); return; }
+                    reservations.push({ 
+                        id: Date.now(), room: ROOM_NAME, date: dateString, slotIndex: s, 
+                        user: "Walk-in", displayName: "Walk-in", userRole: 'student', checkedIn: true 
+                    });
+                } else if (opt === "2" && existing) { // UPDATE (Check-in)
+                    existing.checkedIn = true;
+                    alert("Status updated to: Checked-in");
+                    saveAndRefresh(); // This calls repaint() and saves to localStorage
+                } else if (opt === "3" && existing) { // DELETE (No-show / Cancel)
+                    const reason = confirm("Cancel this reservation? (Select 'OK' for No-show or Manual Cancellation)");
+                    if (reason) {
+                    reservations = reservations.filter(r => r.id !== existing.id);
+                    }
+                }
+                saveAndRefresh();
                 return;
             }
 
+            // Inside handleClick(btn, d, s, t) in rooms.html
+            if (existing) {
+                if (userRole === 'teacher' && existing.userRole === 'student') {
+                    if (confirm("PRIORITY OVERRIDE: Notify student for change in slot?")) {
+                        // Create the notification for the student
+                        let notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+                        notifications.push({
+                            targetUser: existing.user, // The student's email
+                            message: `A Faculty member has taken over your ${existing.room} slot on ${existing.date}. Please find another availability.`,
+                            timestamp: new Date().toLocaleString()
+                        });
+                        localStorage.setItem("notifications", JSON.stringify(notifications));
+
+                        // Remove the reservation
+                        reservations = reservations.filter(r => r.id !== existing.id);
+                        alert("Student notification sent.");
+                        saveAndRefresh();
+                    }
+                } else { 
+                    alert("Slot already reserved."); 
+                }
+                return;
+            }
+
+            const isPending = pendingSelection.find(p => p.d == d && p.s == s);
+            if (isPending) {
+                pendingSelection = pendingSelection.filter(p => !(p.d == d && p.s == s));
+            } else {
+                if (pendingSelection.length < 4) { pendingSelection.push({ d, s, t }); } 
+                else { alert("Limit: 2 hours."); }
+            }
+            $('#reserveBtn').toggle(pendingSelection.length > 0);
+            repaint();
+        }
+
+        // Function triggers when you click the "Confirm Reservation" button
+        function finalizeBooking() {
+            // 1-Hour Minimum Check (2 slots x 30 mins)
+            if (pendingSelection.length < 2) {
+                alert("Minimum reservation time is 1 hour (2 consecutive slots).");
+                return;
+            }
+
+            // Show the custom modal instead of a confirm box
+            const myModal = new bootstrap.Modal(document.getElementById('anonModal'));
+            myModal.show();
+        }
+
+        // Function saves the data based on the "Yes" or "No" button click
+        function processBooking(isAnon) {
+            // Hide the modal first
+            const modalElement = document.getElementById('anonModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+
+            pendingSelection.forEach(item => {
+            const timeRange = `${formatTime(item.t)} - ${formatTime(item.t + 30)}`;
             reservations.push({
-                id: Date.now(),
+                id: Date.now() + Math.random(),
                 room: ROOM_NAME,
-                dayIndex,
-                slotIndex,
-                startTime: new Date(days[dayIndex].getTime() + time*60000),
-                user: "Walk-in",
+                slotIndex: item.s,
+                date: days[item.d].toLocaleDateString(),
+                slotTime: timeRange,
+                user: currentUser,
+                displayName: isAnon ? "Anonymous" : currentUser.split('@')[0],
+                isAnonymous: isAnon,
+                userRole: userRole,
                 checkedIn: false
             });
+        });
 
-            saveReservations();
+            pendingSelection = [];
+            $('#reserveBtn').hide();
+            saveAndRefresh();
+            alert("Reservation confirmed!");
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem("reservations", JSON.stringify(reservations));
             repaint();
-            return;
         }
 
-        // DELETE
-        if (choice === "2" && existing) {
-            reservations = reservations.filter(r => r.id !== existing.id);
-            saveReservations();
-            repaint();
-            return;
-        }
-
-        // UPDATE (Check-In)
-        if (choice === "3" && existing) {
-            existing.checkedIn = true;
-            saveReservations();
-            alert("Marked as checked-in.");
-            return;
-        }
-
-        // UPDATE (Move Reservation)
-        if (choice === "4" && existing) {
-
-            const newDay = prompt("Enter new day index (0-7):");
-            const newSlot = prompt("Enter new slot index:");
-
-            existing.dayIndex = parseInt(newDay);
-            existing.slotIndex = parseInt(newSlot);
-
-            existing.startTime =
-                new Date(days[newDay].getTime() +
-                existing.slotIndex * 30 * 60000);
-
-            saveReservations();
-            repaint();
-            alert("Reservation moved.");
-            return;
-        }
-
-        return;
-    }
-
-
-    // STUDENT MODE
-
-    if (existing) {
-        alert("Slot already reserved.");
-        return;
-    }
-
-    reservations.push({
-        id: Date.now(),
-        room: ROOM_NAME,
-        dayIndex,
-        slotIndex,
-        startTime: new Date(days[dayIndex].getTime() + time*60000),
-        user: currentUser,
-        checkedIn: false
-    });
-
-    saveReservations();
-    repaint();
-}
-
-
-// AUTO NO-SHOW CANCEL
-
-
-setInterval(() => {
-
-    const now = new Date();
-
-    reservations = reservations.filter(res => {
-
-        if (!res.checkedIn) {
-
-            const diff = (now - new Date(res.startTime)) / 60000;
-
-            // 10 minutes
-            if (diff >= 10) {
-                return false;
-            }
-        }
-
-        return true;
-    });
-
-    saveReservations();
-    repaint();
-
-}, 60000); // check every minute
-
-
-repaint();
-
-</script>
+        repaint();
+    </script>
+</body>
+</html>
