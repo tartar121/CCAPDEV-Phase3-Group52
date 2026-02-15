@@ -2,57 +2,175 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Profile - Lab O' Mine</title>
+    <title>Profile - Lab O' Mine</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style> .nav-green { background-color: #2e8b57 !important; } </style>
+    <link rel="icon" type="image/png" href="icon.png">
 </head>
 <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark nav-green">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Lab O' Mine</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="index.html">Home</a>
+                <a class="nav-link" href="rooms.html">View Labs</a>
+                <a class="nav-link active" href="profile.html">My Profile</a>
+                <a class="nav-link text-warning" href="login.html" onclick="localStorage.removeItem('currentUser'); localStorage.removeItem('userRole');">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-4">
                 <div class="card text-center p-3 shadow-sm">
-                    <img src="https://ui-avatars.com/api/?name=Ram+Miguel&background=2e8b57&color=fff" class="rounded-circle mx-auto" width="100">
-                    <h4 class="mt-2">Ram Miguel C. Liwanag</h4>
-                    <p class="text-muted">DLSU Student</p>
+                    <img id="profilePic" src="" class="rounded-circle mx-auto" width="100">
+                    <h4 id="profileName" class="mt-2">Name</h4>
+                    <p id="profileEmail" class="text-muted"></p>
                     <hr>
                     <div class="text-start">
                         <label class="fw-bold">Bio:</label>
-                        <p id="bioText">Loves technology, programming, and playing Honkai: Star Rail.</p>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="editMyBio()">Edit Bio</button>
+                        <p id="bioText">No bio set.</p>
+                    </div>
+                    <div id="selfTools" style="display:none;">
+                        <button class="btn btn-sm btn-outline-secondary w-100 mb-2" onclick="editMyBio()">Edit Bio</button>
+                        <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="editPhoto()">Edit Photo</button>
+                        <button class="btn btn-sm btn-danger w-100" id="deleteAccBtn">Delete Account</button>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-8">
-                <h3>My Lab Reservations</h3>
-                <table class="table table-striped table-bordered mt-3">
+                <h3>Lab Reservations</h3>
+                <table class="table table-striped table-bordered mt-3 bg-white shadow-sm" id="resTable">
                     <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Room</th>
-                            <th>Time</th>
-                        </tr>
+                        <tr><th>Room</th><th>Slot</th><th>Date</th></tr>
                     </thead>
-                    <tbody>
-                        <tr><td>#501</td><td>Gokongwei 302</td><td>Feb 10 - 9:00 AM</td></tr>
-                        <tr><td>#502</td><td>Andrew 1401</td><td>Feb 11 - 1:00 PM</td></tr>
-                        <tr><td>#503</td><td>Velasco 211</td><td>Feb 12 - 10:30 AM</td></tr>
-                        <tr><td>#504</td><td>Henry Sy 4th Flr</td><td>Feb 13 - 3:00 PM</td></tr>
-                        <tr><td>#505</td><td>Gokongwei 306</td><td>Feb 15 - 11:00 AM</td></tr>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
-                <a href="index.html" class="btn btn-dark mt-3">Back to Home</a>
             </div>
         </div>
     </div>
 
     <script>
-        function editMyBio() {
-            var newBio = prompt("Enter your new bio:");
-            if (newBio != null) {
-                document.getElementById("bioText").innerText = newBio;
-                alert("Bio updated locally!"); 
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentUser = localStorage.getItem('currentUser');
+            const viewUser = urlParams.get('viewUser') || currentUser;
+            const isSelf = viewUser === currentUser;
+
+            if (isSelf) {
+                $('#selfTools').show();
+                $('#actionHeader').show(); // Show Actions column if viewing own profile
+            }
+
+            const name = viewUser.split('@')[0].replace('_',' ').replace('.',' ');
+            $('#profileName').text(name.toUpperCase());
+            $('#profileEmail').text(viewUser);
+            
+            // Load Bio/Photo from localStorage
+            $('#bioText').text(localStorage.getItem('bio_' + viewUser) || "Loves technology and labs.");
+            $('#profilePic').attr('src', localStorage.getItem('photo_' + viewUser) || `https://ui-avatars.com/api/?name=${name}&background=2e8b57&color=fff`);
+
+            // RENDER RESERVATIONS
+            let res = JSON.parse(localStorage.getItem("reservations")) || [];
+            let tableBody = $('#resTable tbody');
+            tableBody.empty();  
+            
+            // Logic: See all if it's you, otherwise only see non-anonymous ones
+            let visibleRes = res.filter(r => {
+                if (isSelf) return r.user === viewUser; // Show everything if it's the owner
+                return r.user === viewUser && !r.isAnonymous; // See others only if public
+            });
+
+            if (visibleRes.length === 0) {
+                tableBody.append('<tr><td colspan="3" class="text-center">No public reservations found.</td></tr>');
+            } else {
+                visibleRes.forEach(r => {
+                    let actionButtons = '';
+                    if (isSelf) {
+                        actionButtons = `<td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editReservation('${r.id}')">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelReservation('${r.id}')">Cancel</button>
+                        </td>`;
+                    }
+                    tableBody.append(`
+                        <tr>
+                            <td>${r.room}</td>
+                            <td>${r.slotTime}</td>
+                            <td>${r.date}</td>
+                            ${actionButtons}
+                        </tr>
+                    `);
+                });
+            }
+        });
+        // MANAGEMENT FUNCTIONS
+        function cancelReservation(resId) {
+            if (confirm("Are you sure you want to cancel this reservation?")) {
+                let res = JSON.parse(localStorage.getItem("reservations")) || [];
+                res = res.filter(r => r.id != resId);
+                localStorage.setItem("reservations", JSON.stringify(res));
+                alert("Reservation cancelled.");
+                location.reload();
             }
         }
+        // Edit Reservation Logic: For simplicity, we will just cancel the existing one and redirect to the lab page to pick a new slot
+        function editReservation(resId) {
+            let res = JSON.parse(localStorage.getItem("reservations")) || [];
+            let target = res.find(r => r.id == resId);
+            
+            if (target) {
+                if (confirm("To edit, we will cancel this current slot and take you back to the lab to pick a new one. Proceed?")) {
+                    res = res.filter(r => r.id != resId);
+                    localStorage.setItem("reservations", JSON.stringify(res));
+                    window.location.href = `rooms.html?lab=${encodeURIComponent(target.room)}`;
+                }
+            }
+        }
+        // Edit Bio Logic
+        function editMyBio() {
+            const currentMail = localStorage.getItem('currentUser');
+            const newBio = prompt("Enter your new bio:");
+            if (newBio) {
+                $('#bioText').text(newBio);
+                localStorage.setItem('bio_' + currentMail, newBio);
+            }
+        }
+        // Edit Photo Logic
+        function editPhoto() {
+            const currentMail = localStorage.getItem('currentUser');
+            const url = prompt("Enter new photo URL: (copy image address from the web)");
+            if (url) {
+                $('#profilePic').attr('src', url);
+                localStorage.setItem('photo_' + currentMail, url);
+            }
+        }
+        // Delete Account Logic
+        $('#deleteAccBtn').click(function() {
+            if (confirm("Delete account? This will wipe your profile and all your reservations.")) {
+                const emailToDelete = localStorage.getItem('currentUser');
+        
+                // Remove from the "allUsers" list
+                let users = JSON.parse(localStorage.getItem("allUsers")) || [];
+                localStorage.setItem("allUsers", JSON.stringify(users.filter(u => u.email !== emailToDelete)));
+
+                // Remove all reservations linked to this email
+                let res = JSON.parse(localStorage.getItem("reservations")) || [];
+                localStorage.setItem("reservations", JSON.stringify(res.filter(r => r.user !== emailToDelete)));
+
+                // Remove personal profile data (bio/photo)
+                localStorage.removeItem('bio_' + emailToDelete);
+                localStorage.removeItem('photo_' + emailToDelete);
+
+                // Log out (Remove session data only)
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('userRole');
+                
+                alert("Account and data successfully removed.");
+                window.location.href = 'login.html'; // Deletion sticks because login.html won't re-inject sample users if they already exist
+            }
+        });
     </script>
 </body>
 </html>
