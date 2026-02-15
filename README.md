@@ -30,10 +30,10 @@ The following accounts are hardcoded to demonstrate different role-based feature
 | Student | tara_uy@dlsu.edu.ph | 456 |
 
 ## 🛠️ Tech Stack & Design
-Base Technologies: HTML, CSS, and JavaScript.
-Libraries: Bootstrap 5.3 and jQuery 3.7.1.
-Visual Assets: Appropriate graphics, including a custom pixel-art (made in Canva) and Bootstrap Icons, are used to represent lab status.
+- Base Technologies: HTML, CSS, and JavaScript.
+- Libraries: Bootstrap 5.3 and jQuery 3.7.1.
+- Visual Assets: Appropriate graphics, including a custom pixel-art (made in Canva) and Bootstrap Icons, are used to represent lab status.
 
 ## 📁 Submission Guidelines
-File Format: CCAPDEV-Phase1-Group52.zip.
-Collaboration: Students collaborated through the group's GitHub repository.
+-File Format: CCAPDEV-Phase1-Group52.zip
+-Collaboration: Students collaborated through the group's GitHub repository.
