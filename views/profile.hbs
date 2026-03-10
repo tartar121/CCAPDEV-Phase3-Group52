@@ -1,0 +1,48 @@
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-center p-3 shadow-sm">
+                <img src="{{profileUser.photoUrl}}" class="rounded-circle mx-auto" width="100" alt="Profile Picture">
+                <h4 class="mt-2">{{capital profileUser.name}}</h4>
+                <p class="text-muted">{{profileUser.email}}</p>
+                <hr>
+                <div class="text-start">
+                    <label class="fw-bold">Bio:</label>
+                    <p>{{profileUser.bio}}</p>
+                </div>
+                
+                {{#if isSelf}}
+                <div id="selfTools">
+                <button onclick="editMyBio()" class="btn btn-sm btn-outline-secondary w-100 mb-2">Edit Bio</button>
+                <button onclick="editPhoto()" class="btn btn-sm btn-outline-primary w-100 mb-2">Edit Photo</button>
+                <button onclick="deleteAccount()" class="btn btn-sm btn-danger w-100">Delete Account</button>
+                </div>
+                {{/if}}
+
+                {{#section "pageScripts"}}
+                <script src="/js/profile.js"></script>
+                {{/section}}
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h3>Lab Reservations</h3>
+            <table class="table table-striped table-bordered mt-3 bg-white shadow-sm">
+                <thead class="table-dark">
+                    <tr><th>Room</th><th>Slot</th><th>Date</th></tr>
+                </thead>
+                <tbody>
+                    {{#each reservations}}
+                    <tr>
+                        <td>{{this.room}}</td>
+                        <td>{{this.slotTime}}</td>
+                        <td>{{formatDate this.date}}</td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="3" class="text-center">No reservations found.</td></tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
