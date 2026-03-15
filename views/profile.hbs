@@ -2,9 +2,9 @@
     <div class="row">
         <div class="col-md-4">
             <div class="card text-center p-3 shadow-sm">
-                <img src="{{profileUser.photoUrl}}" class="rounded-circle mx-auto d-block mb-2" 
-                    width="100" height="100" style="object-fit:cover;" alt="Profile Picture">
-                <h4 class="mt-2">{{capital profileUser.name}}</h4>
+                <img src="{{profileUser.photoUrl}}" class="rounded-circle mx-auto d-block mb-2"
+                     width="100" height="100" style="object-fit:cover;" alt="Profile Picture">
+                <h4 class="mt-2">{{profileUser.name}}</h4>
                 <p class="text-muted mb-1">{{profileUser.email}}</p>
                 <span class="badge bg-secondary text-uppercase mb-2">{{profileUser.role}}</span>
                 <hr>
@@ -12,11 +12,26 @@
                     <label class="fw-bold">Bio:</label>
                     <p id="bioText">{{profileUser.bio}}</p>
                 </div>
-                
+
                 {{#if isSelf}}
                 <div id="selfTools" class="d-grid gap-2">
                     <button onclick="editMyBio()" class="btn btn-sm btn-outline-secondary">Edit Bio</button>
-                    <button onclick="editPhoto()" class="btn btn-sm btn-outline-primary">Edit Photo</button>
+
+                    {{! File upload for photo }}
+                    <label class="btn btn-sm btn-outline-primary mb-0" style="cursor:pointer;">
+                        Edit Photo
+                        <input type="file" id="photoFileInput" accept="image/*" style="display:none;">
+                    </label>
+                    <div id="photoPreviewWrap" style="display:none;" class="text-center">
+                        <img id="photoPreview" src="" alt="Preview"
+                             class="rounded-circle mb-2"
+                             style="width:80px;height:80px;object-fit:cover;border:2px solid #2e8b57;">
+                        <div class="d-flex gap-2">
+                            <button onclick="confirmPhotoUpload()" class="btn btn-sm btn-success flex-grow-1">Save</button>
+                            <button onclick="cancelPhotoUpload()"  class="btn btn-sm btn-outline-secondary flex-grow-1">Cancel</button>
+                        </div>
+                    </div>
+
                     <button onclick="deleteAccount()" class="btn btn-sm btn-danger">Delete Account</button>
                 </div>
                 {{/if}}
@@ -37,19 +52,22 @@
                 <tbody>
                     {{#each reservations}}
                     <tr>
-                        <td>{{this.room}}</td>
-                        <td>{{this.slotTime}}</td>
+                        <td>{{this.labCode}}</td>
+                        <td>{{this.timeRange}}</td>
                         <td>{{formatDate this.date}}</td>
                         {{#if ../isSelf}}
                         <td>
-                            {{! FIXED: wired to POST /cancel-reservation via a proper form }}
-                            <form action="/cancel-reservation" method="POST" class="m-0">
-                                <input type="hidden" name="resId" value="{{this._id}}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('Cancel this reservation?')">
-                                    Cancel
-                                </button>
-                            </form>
+                            <div class="d-flex gap-1">
+                                <a href="/rooms?lab={{this.labCode}}&date={{this.date}}&edit={{this._id}}"
+                                   class="btn btn-sm btn-outline-primary">Edit</a>
+                                <form action="/cancel-reservation" method="POST" class="m-0">
+                                    <input type="hidden" name="resId" value="{{this._id}}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Cancel this reservation?')">
+                                        Cancel
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                         {{/if}}
                     </tr>
@@ -67,5 +85,5 @@
 </div>
 
 {{#section "pageScripts"}}
-    <script src="/js/profile.js"></script>
+<script src="/js/profile.js"></script>
 {{/section}}
