@@ -1,35 +1,104 @@
 // load-data.js
-const mongoose = require('mongoose');
-const User = require('./models/user');
-const Reservation = require('./models/reservation');
-const Lab = require('./models/lab');
+const mongoose    = require('mongoose')
+const User        = require('./models/user')
+const Reservation = require('./models/reservation')
+const Lab         = require('./models/lab')
 
 // Connect to your local MongoDB
 mongoose.connect('mongodb://localhost:27017/labOMine')
-    .then(() => console.log('Connected to MongoDB for seeding...'))
-    .catch(err => console.error('Connection error:', err));
+  .then(() => console.log('Connected to MongoDB for seeding...'))
+  .catch(err => console.error('Connection error:', err))
 
-// Helper: returns today's date as YYYY-MM-DD
-function todayISO() {
-    return new Date().toISOString().split('T')[0];
+/* Seat helper
+   - Builds an array of seat objects up to the given count.
+   - Seat numbers start at 1 and are stored as strings.
+*/
+function makeSeatList (total) {
+  return Array.from({ length: total }, (_, i) => ({ seatNumber: String(i + 1) }))
 }
 
-// Put the sample data
+// Time helpers
+// All slots are 30-min blocks stored as "HH:MM AM/PM"
+function numToSlotLabel (h, m) {
+  const suffix  = h >= 12 ? 'PM' : 'AM'
+  const display = h > 12 ? h - 12 : h === 0 ? 12 : h
+  return `${String(display).padStart(2, '0')}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
+// Returns an array of consecutive 30-min slot labels starting at [startH:startM]
+function makeSlots (startH, startM, count) {
+  const result = []
+  let h = startH, m = startM
+
+  for (let i = 0; i < count; i++) {
+    result.push(numToSlotLabel(h, m))
+    m += 30
+    if (m >= 60) { m -= 60; h += 1 }
+    if (h >= 24)   h  = 0
+  }
+
+  return result
+}
+
+// Converts a slot array into "HH:MM AM - HH:MM AM"
+function slotRangeStr (slots) {
+  if (!slots || !slots.length) return ''
+
+  const toMins = label => {
+    const [tp, mer] = label.split(' ')
+    let [h, m] = tp.split(':').map(Number)
+    if (mer === 'PM' && h !== 12) h += 12
+    if (mer === 'AM' && h === 12) h  = 0
+    return h * 60 + m
+  }
+
+  const sorted  = [...slots].sort((a, b) => toMins(a) - toMins(b))
+  const endMins = toMins(sorted[sorted.length - 1]) + 30
+  const eH      = Math.floor(endMins / 60)
+  const eM      = endMins % 60
+  return `${sorted[0]} - ${numToSlotLabel(eH, eM)}`
+}
+
+// Formats a Date as "Mar 16, 2026"
+function shortDate (d) {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+// Reservation doc builder
+function resDoc ({ userId, labId, labCode, seats, date, slots, isAnonymous = false, userRole = 'student', status = 'Active' }) {
+  return {
+    user:        userId,
+    lab:         labId,
+    labCode,
+    seatNumber:  seats,
+    date,
+    slotsArray:  slots,
+    timeSlot:    JSON.stringify(slots),
+    timeRange:   slotRangeStr(slots),
+    isAnonymous,
+    userRole,
+    status
+  }
+}
+
+// MAIN seed function
 async function seed() {
     try {
         // Clear existing data
-        await User.deleteMany({});
-        await Reservation.deleteMany({});
+        await User.deleteMany({})
+        await Reservation.deleteMany({})
+        await Lab.deleteMany({})
 
         // 1. Insert Labs
-        await Lab.insertMany([
-            { name: "Gokongwei 302",    building: "Gokongwei",  capacity: 40, floor: "3rd Floor" },
-            { name: "Gokongwei 306",    building: "Gokongwei",  capacity: 40, floor: "3rd Floor" },
-            { name: "Velasco 211",      building: "Velasco",    capacity: 35, floor: "2nd Floor" },
-            { name: "Henry Sy 4th Floor", building: "Henry Sy", capacity: 50, floor: "4th Floor" },
-            { name: "Andrew 1401",      building: "Andrew",     capacity: 30, floor: "14th Floor" }
-        ]);
-        console.log("Labs seeded.");
+        const labs = await Lab.insertMany([
+        { name: 'Gokongwei 302', labCode: 'GK302',  building: 'Gokongwei Hall',       floor: '3rd Floor',  capacity: 40, seats: makeSeatList(40) },
+        { name: 'Gokongwei 306', labCode: 'GK306',  building: 'Gokongwei Hall',       floor: '3rd Floor',  capacity: 30, seats: makeSeatList(30) },
+        { name: 'Velasco 211',   labCode: 'VL211',  building: 'Velasco Hall',         floor: '2nd Floor',  capacity: 35, seats: makeSeatList(35) },
+        { name: 'Andrew 1904',   labCode: 'AG1904', building: 'Andrew Gonzales Hall', floor: '19th Floor', capacity: 45, seats: makeSeatList(45) },
+        { name: 'Andrew 1401',   labCode: 'AG1401', building: 'Andrew Gonzales Hall', floor: '14th Floor', capacity: 30, seats: makeSeatList(30) }
+        ])
+        const lm = Object.fromEntries(labs.map(l => [l.labCode, l]))
+        console.log('Labs seeded:', Object.keys(lm).join(', '))
 
         // 2. Insert Users (role stored explicitly - no email-checking)
         const users = await User.insertMany([
@@ -38,39 +107,46 @@ async function seed() {
             { name: 'Ram Liwanag',   email: 'ram_liwanag@dlsu.edu.ph',   password: '789',   role: 'student',     bio: "Loves technology, programming, and playing Honkai: Star Rail." },
             { name: 'Dale Balila',   email: 'dale_balila@dlsu.edu.ph',   password: 'abc',   role: 'student',     bio: "CCS Student and part-time sleeper." },
             { name: 'John Teoxon',   email: 'john_teoxon@dlsu.edu.ph',   password: 'def',   role: 'student',     bio: "Enjoys watching movies and exploring new cafes around the city." },
-            { name: 'Admin Account', email: 'admin@dlsu.edu.ph',         password: 'admin', role: 'technician',  bio: "System Administrator / Lab Technician" }
-        ]);
-        console.log("Users seeded.");
-
-        const findUserId = (email) => users.find(u => u.email === email)._id;
-        const today = todayISO();
+            { name: 'Admin Account', email: 'admin@dlsu.edu.ph',         password: 'admin', role: 'technician',  bio: "Lab Technician" }
+        ])
+        const um = Object.fromEntries(users.map(u => [u.email, u]))
+        console.log("Users seeded.")
 
         // 3. Insert Reservations (date as YYYY-MM-DD)
+        const day1 = shortDate(new Date(Date.now() + 86_400_000 * 1))   // tomorrow
+        const day2 = shortDate(new Date(Date.now() + 86_400_000 * 2))   // day after
+        const day3 = shortDate(new Date(Date.now() + 86_400_000 * 3))   // 3 days ahead
+
         await Reservation.insertMany([
-            { room: "Gokongwei 302",    date: today, slotIndex: 2,  slotTime: "8:30 AM - 9:00 AM",    user: findUserId('oliver.berris@dlsu.edu.ph'), userRole: 'faculty',  isAnonymous: false },
-            { room: "Gokongwei 302",    date: today, slotIndex: 3,  slotTime: "9:00 AM - 9:30 AM",    user: findUserId('oliver.berris@dlsu.edu.ph'), userRole: 'faculty',  isAnonymous: false },
-            { room: "Velasco 211",      date: today, slotIndex: 5,  slotTime: "10:00 AM - 10:30 AM",  user: findUserId('tara_uy@dlsu.edu.ph'),       userRole: 'student',  isAnonymous: true  },
-            { room: "Velasco 211",      date: today, slotIndex: 6,  slotTime: "10:30 AM - 11:00 AM",  user: findUserId('tara_uy@dlsu.edu.ph'),       userRole: 'student',  isAnonymous: true  },
-            { room: "Andrew 1401",      date: today, slotIndex: 10, slotTime: "12:30 PM - 1:00 PM",   user: findUserId('ram_liwanag@dlsu.edu.ph'),   userRole: 'student',  isAnonymous: false },
-            { room: "Andrew 1401",      date: today, slotIndex: 11, slotTime: "1:00 PM - 1:30 PM",    user: findUserId('ram_liwanag@dlsu.edu.ph'),   userRole: 'student',  isAnonymous: false },
-            { room: "Gokongwei 306",    date: today, slotIndex: 4,  slotTime: "9:30 AM - 10:00 AM",   user: findUserId('dale_balila@dlsu.edu.ph'),   userRole: 'student',  isAnonymous: false },
-            { room: "Gokongwei 306",    date: today, slotIndex: 5,  slotTime: "10:00 AM - 10:30 AM",  user: findUserId('dale_balila@dlsu.edu.ph'),   userRole: 'student',  isAnonymous: false },
-            { room: "Henry Sy 4th Floor", date: today, slotIndex: 1, slotTime: "8:00 AM - 8:30 AM",  user: findUserId('john_teoxon@dlsu.edu.ph'),   userRole: 'student',  isAnonymous: false },
-            { room: "Henry Sy 4th Floor", date: today, slotIndex: 2, slotTime: "8:30 AM - 9:00 AM",  user: findUserId('john_teoxon@dlsu.edu.ph'),   userRole: 'student',  isAnonymous: false }
-        ]);
-        console.log("Reservations seeded.");
+            // Day 1 — tomorrow
+            resDoc({ userId: um['oliver.berris@dlsu.edu.ph']._id, labId: lm.GK302._id,  labCode: 'GK302',  seats: [5],      date: day1, slots: makeSlots(8, 30, 2),  userRole: 'faculty' }),
+            resDoc({ userId: um['tara_uy@dlsu.edu.ph']._id,       labId: lm.VL211._id,  labCode: 'VL211',  seats: [12],     date: day1, slots: makeSlots(10, 0, 2),  isAnonymous: true }),
+            resDoc({ userId: um['dale_balila@dlsu.edu.ph']._id,   labId: lm.GK306._id,  labCode: 'GK306',  seats: [3],      date: day1, slots: makeSlots(9, 30, 2) }),
+            resDoc({ userId: um['john_teoxon@dlsu.edu.ph']._id,   labId: lm.AG1904._id, labCode: 'AG1904', seats: [20],     date: day1, slots: makeSlots(8, 0, 2) }),
+            // Day 1 — multiple seats to demo seat grid variety
+            resDoc({ userId: um['tara_uy@dlsu.edu.ph']._id,       labId: lm.GK302._id,  labCode: 'GK302',  seats: [15,16],  date: day1, slots: makeSlots(14, 0, 3) }),
+            resDoc({ userId: um['ram_liwanag@dlsu.edu.ph']._id,   labId: lm.AG1401._id, labCode: 'AG1401', seats: [7,8],    date: day1, slots: makeSlots(12, 30, 2) }),
+            // Day 2
+            resDoc({ userId: um['ram_liwanag@dlsu.edu.ph']._id,   labId: lm.GK306._id,  labCode: 'GK306',  seats: [8],      date: day2, slots: makeSlots(10, 0, 4) }),
+            resDoc({ userId: um['dale_balila@dlsu.edu.ph']._id,   labId: lm.GK302._id,  labCode: 'GK302',  seats: [22,23],  date: day2, slots: makeSlots(9, 0, 2) }),
+            resDoc({ userId: um['john_teoxon@dlsu.edu.ph']._id,   labId: lm.VL211._id,  labCode: 'VL211',  seats: [5,6,7],  date: day2, slots: makeSlots(13, 0, 2) }),
+            // Day 3
+            resDoc({ userId: um['oliver.berris@dlsu.edu.ph']._id, labId: lm.AG1904._id, labCode: 'AG1904', seats: [10,11],  date: day3, slots: makeSlots(8, 0, 4),   userRole: 'faculty' }),
+            resDoc({ userId: um['tara_uy@dlsu.edu.ph']._id,       labId: lm.GK306._id,  labCode: 'GK306',  seats: [1,2,3],  date: day3, slots: makeSlots(11, 0, 2),  isAnonymous: true })
+        ])
+        console.log("Reservations seeded.")
         
-        console.log("\n Database seeded successfully!");
-        console.log("Demo credentials:");
-        console.log("  Technician : admin@dlsu.edu.ph        / admin");
-        console.log("  Faculty    : oliver.berris@dlsu.edu.ph / 123");
-        console.log("  Student    : tara_uy@dlsu.edu.ph       / 456");
+        console.log("\n Database seeded successfully!")
+        console.log("Demo credentials:")
+        console.log("  Technician : admin@dlsu.edu.ph        / admin")
+        console.log("  Faculty    : oliver.berris@dlsu.edu.ph / 123")
+        console.log("  Student    : tara_uy@dlsu.edu.ph       / 456")
     } catch (err) {
-        console.error("Seeding error:", err);
+        console.error("Seeding error:", err)
     } finally {
-        mongoose.connection.close();
-        process.exit();
+        mongoose.connection.close()
+        process.exit()
     }
 }
 
-seed();
+seed()
