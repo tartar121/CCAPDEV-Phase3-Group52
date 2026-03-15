@@ -3,7 +3,7 @@
 // Edit Bio Logic
 function editMyBio() {
     const newBio = prompt("Enter your new bio:");
-    if (newBio) {
+    if (newBio !== null && newBio.trim() !== "") {
         fetch('/profile/update-bio', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -17,7 +17,7 @@ function editMyBio() {
 // Edit Photo Logic
 function editPhoto() {
     const newUrl = prompt("Enter new photo URL:");
-    if (newUrl) {
+    if (newUrl !== null && newUrl.trim() !== "") {
         fetch('/profile/update-photo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
