@@ -98,10 +98,10 @@ exports.getBookedSlots = async (req, res) => {
 
     const totalSeats = lab.seats ? lab.seats.length : (lab.capacity || 0)
 
-    // First pass: count booked seats per slot across all reservations
+    // First pass: group by slot using only stillActive (past slots filtered out for today)
     const slotBookings = {}   // slotLabel -> array of reservation docs
 
-    active.forEach(doc => {
+    stillActive.forEach(doc => {
       if (!doc.timeSlot) return
       let parsedSlots
       try { parsedSlots = JSON.parse(doc.timeSlot) }
@@ -174,13 +174,19 @@ exports.createReservation = async (req, res) => {
     // at the same time slot on the same date
     const requestedSeats = Array.isArray(seats) ? seats.map(Number) : [Number(seats)]
 
-    const conflicting = await Reservation.findOne({
-      lab:    lab._id,
+    const isFaculty = req.session.currentUser.role === 'faculty'
+
+    // Faculty can bump students — only block faculty if another faculty/tech has the seat
+    const conflictQuery = {
+      lab:        lab._id,
       date,
-      status: 'Active',
-      seatNumber: { $in: requestedSeats },   // any of the requested seats
-      slotsArray: { $in: slotsArray }         // overlapping any of the requested slots
-    })
+      status:     'Active',
+      seatNumber: { $in: requestedSeats },
+      slotsArray: { $in: slotsArray }
+    }
+    if (isFaculty) conflictQuery.userRole = { $in: ['faculty', 'technician'] }
+
+    const conflicting = await Reservation.findOne(conflictQuery)
 
     if (conflicting) {
       const takenSeats = Array.isArray(conflicting.seatNumber)
@@ -189,6 +195,26 @@ exports.createReservation = async (req, res) => {
       return res.status(409).json({
         error: `Seat(s) ${takenSeats} are already reserved at one or more of your selected time slots. Please choose different seats or a different time.`
       })
+    }
+
+    // Priority system: faculty can bump students from conflicting seats
+    let bumpedStudents = 0
+    if (isFaculty) {
+      const studentConflicts = await Reservation.find({
+        lab:        lab._id,
+        date,
+        status:     'Active',
+        userRole:   'student',
+        seatNumber: { $in: requestedSeats },
+        slotsArray: { $in: slotsArray }
+      })
+      if (studentConflicts.length > 0) {
+        bumpedStudents = studentConflicts.length
+        await Reservation.updateMany(
+          { _id: { $in: studentConflicts.map(r => r._id) } },
+          { status: 'Cancelled' }
+        )
+      }
     }
 
     const doc = await Reservation.create({
@@ -205,7 +231,7 @@ exports.createReservation = async (req, res) => {
       status:      'Active'
     })
 
-    res.status(201).json(doc)
+    res.status(201).json({ ...doc.toObject(), bumpedCount: bumpedStudents })
   } catch (err) {
     console.error('createReservation:', err)
     res.status(500).json({ error: 'Could not create reservation.' })
@@ -260,7 +286,7 @@ exports.updateReservation = async (req, res) => {
         timeRange:  timeRange || slotsToDisplayRange(slotsArray),
         isAnonymous: !!isAnonymous
       },
-      { new: true }
+      { returnDocument: 'after' }
     )
 
     res.json(updated)
@@ -319,13 +345,17 @@ exports.techReserve = async (req, res) => {
     const lab = await Lab.findOne({ $or: [{ labCode: room }, { name: room }] })
     if (!lab) return res.status(404).send('Lab not found.')
 
+    // Convert ISO date from form (YYYY-MM-DD) to locale string used in DB ("Mar 16, 2026")
+    const localeDate = new Date(date + 'T00:00:00')
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
     const slots = [slotTime]
     await Reservation.create({
       user:        req.session.currentUser._id,
       lab:         lab._id,
       labCode:     lab.labCode,
       seatNumber:  [parseInt(seatNumber) || 1],
-      date,
+      date:        localeDate,
       slotsArray:  slots,
       timeSlot:    JSON.stringify(slots),
       timeRange:   slotsToDisplayRange(slots),
