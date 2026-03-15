@@ -1,5 +1,4 @@
 // controllers/labCon.js
-const User = require('../models/user');
 const Lab  = require('../models/lab');
 
 exports.getDashboard = async (req, res) => {
@@ -7,13 +6,14 @@ exports.getDashboard = async (req, res) => {
         // Load labs from database
         const laboratories = await Lab.find().lean();
 
-        // Load all non-technician users for the users panel
-        const users = await User.find({ role: { $ne: 'technician' } }).lean();
+        // Build today's local ISO date to pass to rooms links
+        const now      = new Date()
+        const todayISO = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
 
         res.render('index', {
             title: "Dashboard",
-            users,
-            laboratories
+            laboratories,
+            todayISO
         });
     } catch (err) {
         console.error(err);
