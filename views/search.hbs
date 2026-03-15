@@ -3,7 +3,7 @@
         <h3>Search Lab Availability</h3>
         <form action="/rooms" method="GET">
             <div class="mb-3">
-                <label>Select Lab</label>
+                <label class="form-label fw-bold">Select Lab</label>
                 <select name="lab" class="form-select">
                     <option>Gokongwei 302</option>
                     <option>Gokongwei 306</option>
@@ -13,7 +13,7 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label>Date</label>
+                <label class="form-label fw-bold">Date</label>
                 <input type="date" name="date" class="form-control" required min="{{today}}">
             </div>
             <button type="submit" class="btn btn-success w-100">Search Availability</button>
