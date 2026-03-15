@@ -15,29 +15,13 @@
 
 <h3 class="mb-3">Select a Laboratory</h3>
 <div class="row g-4 mb-5">
-    {{#each laboratories}} 
+    {{#each laboratories}}
     <div class="col-md-4">
         <div class="card lab-card shadow-sm border-success text-center p-3">
             <h5>{{this.name}}</h5>
             <p class="text-muted small mb-1">{{this.building}} — {{this.floor}}</p>
             <p class="text-muted small">Capacity: {{this.capacity}} seats</p>
-            <a href="/rooms?lab={{this.name}}" class="btn btn-outline-success">View Seats</a>
-        </div>
-    </div>
-    {{/each}}
-</div>
-
-<hr>
-
-<h3 class="mt-4 mb-3">Users</h3>
-<div class="row row-cols-2 row-cols-md-5 g-3">
-    {{#each users}}
-    <div class="col">
-        <div class="card lab-card p-2 text-center shadow-sm border-success">
-            <a href="/profile/{{this.email}}" class="text-decoration-none fw-bold text-dark small">
-                {{capital this.name}}
-            </a>
-            <span class="badge mt-1 role-{{this.role}}">{{capital this.role}}</span>
+            <a href="/rooms?lab={{this.name}}&date={{../todayISO}}" class="btn btn-outline-success">View Seats</a>
         </div>
     </div>
     {{/each}}
