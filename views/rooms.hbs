@@ -1,68 +1,86 @@
 {{#section "pageStyles"}}
 <style>
-    .table-responsive { max-height: 70vh; overflow-y: auto; }
+    .table-responsive { max-height: 65vh; overflow-y: auto; }
     .btn-available  { background-color: #ffffff; color: #2e8b57; border: 1px solid #2e8b57; }
-    .btn-selected   { background-color: #ffc107 !important; color: #000 !important; border: 1px solid #ffc107; } 
-    .btn-reserved   { background-color: #842029 !important; color: white !important; cursor: pointer; } 
-    .btn-faculty    { background-color: #0d6efd !important; color: white !important; } 
-    .btn-checkedin  { background-color: #198754 !important; color: white !important; border: 1px solid #198754; }
-    .btn-walkin     { background-color: #6f42c1 !important; color: white !important; cursor: default; }
+    .btn-selected   { background-color: #ffc107 !important; color: #000 !important; border: 1px solid #ffc107; }
+    .btn-reserved   { background-color: #842029 !important; color: white !important; cursor: default; }
+    .btn-faculty    { background-color: #0d6efd !important; color: white !important; cursor: default; }
+    .btn-checkedin  { background-color: #198754 !important; color: white !important; cursor: default; }
+
+    /* Seat grid */
+    .seat-grid-wrap { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
+    .seat-unit {
+        width: 72px; height: 60px; border-radius: 8px; border: 2px solid #2e8b57;
+        background: #fff; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; font-size: 11px; font-weight: 600; cursor: pointer;
+        transition: all 0.15s; color: #2e8b57; user-select: none;
+    }
+    .seat-unit:hover          { background: #d1f0e0; }
+    .seat-unit.selected       { background: #ffc107 !important; color: #000 !important; border-color: #e0a800 !important; }
+    .seat-unit.reserved       { background: #842029; color: #fff; border-color: #6b1a21; cursor: not-allowed; }
+    .seat-unit.faculty        { background: #0d6efd; color: #fff; border-color: #0a58ca; cursor: not-allowed; }
+    .seat-unit i              { font-size: 18px; margin-bottom: 2px; }
+    .seat-legend span         { font-size: 12px; }
     .tech-panel     { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+
+    /* Reservation popover */
+    .res-popover {
+        position: fixed; z-index: 9999; display: none;
+        background: #fff; border: 1px solid #dee2e6; border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 12px 14px;
+        min-width: 200px; max-width: 240px; pointer-events: auto;
+    }
+    .res-popover .pop-avatar {
+        width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+        border: 2px solid #2e8b57; flex-shrink: 0;
+    }
+    .res-popover .pop-name { font-weight: 600; font-size: 13px; color: #1a1a1a; }
+    .res-popover .pop-name a { color: #2e8b57; text-decoration: none; }
+    .res-popover .pop-name a:hover { text-decoration: underline; }
+    .res-popover .pop-meta { font-size: 11px; color: #6c757d; margin-top: 2px; }
+    .res-popover .pop-anon { font-size: 12px; color: #6c757d; font-style: italic; }
+    .seat-unit.reserved { cursor: pointer !important; }
 </style>
 {{/section}}
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 id="roomTitle">{{labName}}</h2>
-        <div class="d-flex gap-2">
-            <button id="confirmBtn" class="btn btn-success" style="display:none;" onclick="showPrivacyModal()">
-                Confirm Reservation
-            </button>
-            {{! FIXED: back button goes to dashboard, not /search }}
-            <a href="/" class="btn btn-outline-secondary">← Dashboard</a>
+        <div>
+            <h2 class="mb-0">{{labName}}</h2>
+            <small class="text-muted">{{labCode}}</small>
         </div>
+        <a href="/" class="btn btn-outline-secondary">← Dashboard</a>
     </div>
 
-    {{! Technician panel — only visible to technicians }}
+    {{! Technician panel }}
     {{#if isTechnician}}
     <div class="tech-panel">
-        <strong>Technician Tools</strong>
-        <p class="mb-2 mt-1 small">Click any <span class="badge bg-danger">Reserved</span> slot below to cancel a no-show, or use the form to manually book a walk-in.</p>
-        <form action="/tech/reserve" method="POST" class="row g-2 align-items-end mt-1">
-            <div class="col-md-3">
-                <label class="form-label small fw-bold mb-1">Walk-in Name</label>
-                <input type="text" name="walkinName" class="form-control form-control-sm" placeholder="Student name" required>
+        <strong>🔧 Technician Tools</strong> &nbsp;
+        <span class="text-muted small">Click any reserved time slot below to cancel a no-show.</span>
+        <form action="/tech/reserve" method="POST" class="row g-2 align-items-end mt-2">
+            <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Seat #</label>
+                <input type="number" name="seatNumber" class="form-control form-control-sm" min="1" max="{{totalSeats}}" placeholder="e.g. 5" required>
             </div>
             <div class="col-md-2">
                 <label class="form-label small fw-bold mb-1">Date</label>
                 <input type="date" name="date" class="form-control form-control-sm" required>
             </div>
             <div class="col-md-3">
-                <label class="form-label small fw-bold mb-1">Time Slot</label>
+                <label class="form-label small fw-bold mb-1">Time Slot (start)</label>
                 <select name="slotTime" class="form-select form-select-sm" required>
-                    <option>7:30 AM - 8:00 AM</option>
-                    <option>8:00 AM - 8:30 AM</option>
-                    <option>8:30 AM - 9:00 AM</option>
-                    <option>9:00 AM - 9:30 AM</option>
-                    <option>9:30 AM - 10:00 AM</option>
-                    <option>10:00 AM - 10:30 AM</option>
-                    <option>10:30 AM - 11:00 AM</option>
-                    <option>11:00 AM - 11:30 AM</option>
-                    <option>11:30 AM - 12:00 PM</option>
-                    <option>12:00 PM - 12:30 PM</option>
-                    <option>12:30 PM - 1:00 PM</option>
-                    <option>1:00 PM - 1:30 PM</option>
-                    <option>1:30 PM - 2:00 PM</option>
-                    <option>2:00 PM - 2:30 PM</option>
-                    <option>2:30 PM - 3:00 PM</option>
-                    <option>3:00 PM - 3:30 PM</option>
-                    <option>3:30 PM - 4:00 PM</option>
-                    <option>4:00 PM - 4:30 PM</option>
-                    <option>4:30 PM - 5:00 PM</option>
+                    <option>08:00 AM</option><option>08:30 AM</option>
+                    <option>09:00 AM</option><option>09:30 AM</option>
+                    <option>10:00 AM</option><option>10:30 AM</option>
+                    <option>11:00 AM</option><option>11:30 AM</option>
+                    <option>12:00 PM</option><option>12:30 PM</option>
+                    <option>01:00 PM</option><option>01:30 PM</option>
+                    <option>02:00 PM</option><option>02:30 PM</option>
+                    <option>03:00 PM</option><option>03:30 PM</option>
+                    <option>04:00 PM</option><option>04:30 PM</option>
                 </select>
             </div>
-            <input type="hidden" name="room" value="{{labName}}">
-            <input type="hidden" name="slotIndex" value="0">
+            <input type="hidden" name="room" value="{{labCode}}">
             <div class="col-md-2">
                 <button type="submit" class="btn btn-warning btn-sm w-100">Book Walk-in</button>
             </div>
@@ -70,97 +88,209 @@
     </div>
     {{/if}}
 
-    <div class="table-responsive bg-white shadow-sm rounded">
-        <table class="table table-bordered text-center align-middle mb-0">
-            <thead class="table-dark sticky-top">
-                <tr>
-                    <th>Timeslots</th>
-                    {{#each days}}<th>{{this}}</th>{{/each}}
-                </tr>
-            </thead>
-            <tbody>
-                {{#each timeslots}}
-                <tr>
-                    <td class="fw-bold small">{{this.timeLabel}}</td>
-                    {{#each this.dayCells}}
-                    <td>
-                        {{#if this.reserved}}
-                            {{#if this.isCheckedIn}}
-                                <button class="btn btn-sm btn-checkedin w-100" disabled>Checked-in</button>
-                            {{else if this.isFaculty}}
-                                {{#if ../isTechnician}}
-                                {{! Technicians can cancel faculty slots too via no-show form }}
-                                <form action="/tech/cancel-noshow" method="POST" class="m-0">
-                                    <input type="hidden" name="resId" value="{{this.reservationId}}">
-                                    <input type="hidden" name="room"  value="{{../../labName}}">
-                                    <input type="hidden" name="date"  value="{{this.isoDate}}">
-                                    <button type="submit" class="btn btn-sm btn-faculty w-100"
-                                        onclick="return confirm('Cancel this faculty reservation?')">
-                                        Faculty
-                                    </button>
-                                </form>
-                                {{else}}
-                                <button class="btn btn-sm btn-faculty w-100" disabled>Faculty</button>
-                                {{/if}}
-                            {{else}}
-                                {{#if ../../isTechnician}}
-                                <form action="/tech/cancel-noshow" method="POST" class="m-0">
-                                    <input type="hidden" name="resId" value="{{this.reservationId}}">
-                                    <input type="hidden" name="room"  value="{{../../labName}}">
-                                    <input type="hidden" name="date"  value="{{this.isoDate}}">
-                                    <button type="submit" class="btn btn-sm btn-reserved w-100"
-                                        onclick="return confirm('Cancel this reservation as no-show?')">
-                                        No-show?
-                                    </button>
-                                </form>
-                                {{else}}
-                                <button class="btn btn-sm btn-reserved w-100" disabled>Reserved</button>
-                                {{/if}}
-                            {{/if}}
-                        {{else}}
-                            <button class="btn btn-sm btn-available w-100"
-                                data-day="{{this.dayIndex}}"
-                                data-slot="{{this.slotIndex}}"
-                                data-date="{{this.isoDate}}"
-                                data-time="{{../timeLabel}}"
-                                onclick="reserveSlot(this, '{{this.isoDate}}', {{this.slotIndex}}, '{{../../labName}}')">
-                                Reserve
-                            </button>
-                        {{/if}}
-                    </td>
-                    {{/each}}
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-    </div>
+    <div class="row g-3">
 
-    {{! Anonymity modal }}
-    <div class="modal fade" id="anonModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg p-3">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold">Reservation Privacy</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        {{! LEFT: Seat Grid }}
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Select a Seat</span>
+                    <small>{{totalSeats}} seats total</small>
                 </div>
-                    <div class="modal-body">
-                    <p>Would you like to reserve these slots anonymously?</p>
+                <div class="card-body p-2">
+                    <div class="seat-grid-wrap" id="seatContainer">
+                        {{! Rendered by rooms.js via renderSeats() }}
+                        <p class="text-muted small p-2">Loading seats...</p>
+                    </div>
                 </div>
-                <div class="modal-footer border-0 d-flex gap-2">
-                    <button class="btn btn-success flex-grow-1" onclick="processBooking(true)">Yes, Anonymous</button>
-                    <button class="btn btn-outline-secondary flex-grow-1" onclick="processBooking(false)">No, Show My Name</button>
+                <div class="card-footer d-flex justify-content-between align-items-center py-2">
+                    <div class="seat-legend d-flex gap-3">
+                        <span><span class="badge" style="background:#2e8b57">■</span> Available</span>
+                        <span><span class="badge bg-warning text-dark">■</span> Selected</span>
+                        <span><span class="badge bg-danger">■</span> Reserved</span>
+                        <span><span class="badge bg-primary">■</span> Faculty</span>
+                    </div>
+                    <button class="btn btn-success btn-sm" id="btnProceed" disabled>
+                        Proceed →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{! RIGHT: Time-slot schedule table }}
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <span class="fw-bold">Weekly Schedule</span>
+                    <small class="ms-2 opacity-75">Select date below, then pick a seat</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center align-middle mb-0" id="scheduleTable" style="font-size:12px;">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th style="min-width:110px;">Time</th>
+                                {{#each days}}<th style="min-width:80px;">{{this}}</th>{{/each}}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each timeslots}}
+                            <tr>
+                                <td class="fw-bold small">{{this.timeLabel}}</td>
+                                {{#each this.dayCells}}
+                                <td class="p-1">
+                                    {{#if this.reserved}}
+                                        {{#if this.isFaculty}}
+                                        {{#if ../../isTechnician}}
+                                            <button class="btn btn-sm btn-primary w-100 py-0" style="font-size:10px;"
+                                                onclick="techCancel('{{this.reservationId}}', this)"
+                                                data-resid="{{this.reservationId}}">Faculty</button>
+                                        {{else}}
+                                            <span class="badge bg-primary w-100">Faculty</span>
+                                        {{/if}}
+                                        {{else}}
+                                            {{#if ../../isTechnician}}
+                                            <button class="btn btn-sm btn-danger w-100 py-0" style="font-size:10px;"
+                                                onclick="techCancel('{{this.reservationId}}', this)"
+                                                data-resid="{{this.reservationId}}">No-show?</button>
+                                            {{else}}
+                                            <span class="badge bg-danger w-100" style="font-size:10px;">
+                                                {{#if this.reserveeName}}{{this.reserveeName}}{{else}}Reserved{{/if}}
+                                            </span>
+                                            {{/if}}
+                                        {{/if}}
+                                    {{else if this.partiallyBooked}}
+                                    <span class="badge w-100" style="background:#fff3cd;color:#664d03;font-size:10px;">{{this.seatsLeft}} left</span>
+                                    {{else}}
+                                    <span class="badge w-100" style="background:#d1f0e0;color:#1a5c38;font-size:10px;">Free</span>
+                                    {{/if}}
+                                </td>
+                                {{/each}}
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="mt-3 d-flex justify-content-center gap-3">
-        <span><span class="badge btn-available border text-dark">White</span> Available</span>
-        <span><span class="badge bg-warning text-dark">Yellow</span> Selected</span>
-        <span><span class="badge bg-danger">Red</span> Reserved</span>
-        <span><span class="badge bg-primary">Blue</span> Faculty</span>
-        <span><span class="badge bg-success">Green</span> Checked-in</span>
-        {{#if isTechnician}}<span><span class="badge bg-warning text-dark">Click red/blue</span> Cancel no-show</span>{{/if}}
+{{! Reservation Modal (date + time picker) }}
+<div class="modal fade" id="reservationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 bg-success text-white">
+                <div>
+                    <h5 class="fw-bold mb-0" id="modalTitle">{{labName}}</h5>
+                    <small id="modalSub" class="opacity-75">Select Date &amp; Time</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <label class="form-label fw-bold">Select Date</label>
+                        <div id="calendarEl" class="border rounded p-2" style="min-height:300px;"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold">Select Time Slots</label>
+                        <div id="timeSlotGrid" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-success w-100" id="finalConfirm" type="button">
+                    Review Reservation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{! Summary / Confirm Modal }}
+<div class="modal fade" id="summaryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 bg-success text-white">
+                <h5 class="fw-bold mb-0">Review Reservation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="reservation-form">
+                <div class="modal-body">
+                    <input type="hidden" id="f_labId"    name="labId">
+                    <input type="hidden" id="f_labCode"  name="labCode">
+                    <input type="hidden" id="f_seats"    name="seats">
+                    <input type="hidden" id="f_date"     name="date">
+                    <input type="hidden" id="f_time"     name="time">
+                    <input type="hidden" id="f_slots"    name="slots">
+                    <input type="hidden" id="f_resId"    name="reservation_id">
+
+                    <div class="list-group list-group-flush mb-3">
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Lab</span>
+                            <strong id="sum_lab"></strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Seat(s)</span>
+                            <strong id="sum_seats"></strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Date</span>
+                            <strong id="sum_date"></strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Time</span>
+                            <strong id="sum_time"></strong>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="isAnonymous" name="isAnonymous">
+                        <label class="form-check-label text-muted small" for="isAnonymous">
+                            Book anonymously (hide my name from others)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success" id="btnFinalSubmit" type="submit">Confirm Reservation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{! Success Modal }}
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content text-center p-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size:3rem;"></i>
+            <h5 class="fw-bold mt-2">Reserved!</h5>
+            <p class="text-muted small mb-3">Your seat has been successfully reserved.</p>
+            <button type="button" class="btn btn-success w-100" data-bs-dismiss="modal">Great!</button>
+        </div>
+    </div>
+</div>
+
+{{! Inject data for JS }}
+<script>
+    window.LAB_ID      = "{{labId}}";
+    window.LAB_CODE    = "{{labCode}}";
+    window.LAB_NAME    = "{{labName}}";
+    window.BASE_ISO    = "{{baseISO}}";
+    window.IS_TECH     = {{#if isTechnician}}true{{else}}false{{/if}};
+    window.TOTAL_SEATS = {{totalSeats}};
+    window.SCROLL_TIME = "{{scrollToTime}}";
+</script>
+
+{{! Shared reservation popover — shown on hover of reserved seats/slots }}
+<div class="res-popover" id="resPopover">
+    <div class="d-flex align-items-center gap-2 mb-1">
+        <img class="pop-avatar" id="popAvatar" src="" alt="">
+        <div>
+            <div class="pop-name" id="popName"></div>
+            <div class="pop-meta" id="popMeta"></div>
+        </div>
     </div>
 </div>
 
