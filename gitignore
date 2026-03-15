@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Uploaded profile photos — keep the folder but not the files
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Environment / secrets
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
