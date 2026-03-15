@@ -140,18 +140,16 @@
                                 <td class="p-1">
                                     {{#if this.reserved}}
                                         {{#if this.isFaculty}}
-                                        {{#if ../../isTechnician}}
+                                            {{#if ../../isTechnician}}
                                             <button class="btn btn-sm btn-primary w-100 py-0" style="font-size:10px;"
-                                                onclick="techCancel('{{this.reservationId}}', this)"
-                                                data-resid="{{this.reservationId}}">Faculty</button>
-                                        {{else}}
+                                                onclick="techCancel('{{this.reservationId}}', this)">Faculty</button>
+                                            {{else}}
                                             <span class="badge bg-primary w-100">Faculty</span>
-                                        {{/if}}
+                                            {{/if}}
                                         {{else}}
                                             {{#if ../../isTechnician}}
                                             <button class="btn btn-sm btn-danger w-100 py-0" style="font-size:10px;"
-                                                onclick="techCancel('{{this.reservationId}}', this)"
-                                                data-resid="{{this.reservationId}}">No-show?</button>
+                                                onclick="techCancel('{{this.reservationId}}', this)">No-show?</button>
                                             {{else}}
                                             <span class="badge bg-danger w-100" style="font-size:10px;">
                                                 {{#if this.reserveeName}}{{this.reserveeName}}{{else}}Reserved{{/if}}
@@ -274,11 +272,11 @@
 
 {{! Inject data for JS }}
 <script>
-    window.LAB_ID      = "{{labId}}";
-    window.LAB_CODE    = "{{labCode}}";
-    window.LAB_NAME    = "{{labName}}";
-    window.BASE_ISO    = "{{baseISO}}";
-    window.IS_TECH     = {{#if isTechnician}}true{{else}}false{{/if}};
+    window.LAB_ID    = "{{labId}}";
+    window.LAB_CODE  = "{{labCode}}";
+    window.LAB_NAME  = "{{labName}}";
+    window.BASE_ISO  = "{{baseISO}}";
+    window.IS_TECH   = {{#if isTechnician}}true{{else}}false{{/if}};
     window.TOTAL_SEATS = {{totalSeats}};
     window.SCROLL_TIME = "{{scrollToTime}}";
 </script>
