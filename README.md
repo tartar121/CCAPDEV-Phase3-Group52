@@ -24,16 +24,16 @@ Ensure you have the following installed:
 ### 1. Clone the repository to your local machine.
 ### 2. Install dependencies:
 ```bash
-npm install express express-handlebars mongoose express-session
+npm install express express-handlebars mongoose express-session multer
 ```
 ### 3. Start MongoDB: Make sure your local MongoDB instance is running.
 ### 4. Seed the Database: Run the data loader script to initialize users and lab data:
 ```bash
-node load-data.js
+npm run seed
 ```
 ### 5. Start the Server:
 ```bash
-node app.js
+npm start
 ```
 ### 6. Access the app: Open your browser and go to http://localhost:3000
 
