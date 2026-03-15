@@ -20,10 +20,20 @@
     <p class="sub-title">Computer Lab Reservation System</p>
 
     <div class="card p-4 shadow-lg">
-        {{#if error}}<div class="alert alert-danger p-2 small">{{error}}</div>{{/if}}
+        {{#if error}}
+            <div class="alert alert-danger p-2 small">{{error}}</div>
+        {{/if}}
+        {{#if success}}
+            <div class="alert alert-success p-2 small">{{success}}</div>
+        {{/if}}
+        
         <ul class="nav nav-tabs mb-4" id="authTabs">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#loginView">Login</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#registerView">Register</button></li>
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#loginView">Login</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#registerView">Register</button>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -31,13 +41,17 @@
                 <form action="/login" method="POST">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">DLSU Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="juan_delacruz@dlsu.edu.ph" required>
+                        <input type="email" name="email" class="form-control" 
+                            placeholder="juan_delacruz@dlsu.edu.ph" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Password</label>
                         <div class="password-wrapper">
-                            <input type="password" id="loginPass" name="password" class="form-control" placeholder="••••••••" required>
-                            <button type="button" class="toggle-btn" onclick="toggleVisibility('loginPass', this)"><i class="bi bi-eye"></i></button>
+                            <input type="password" id="loginPass" name="password" 
+                                class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="toggle-btn" 
+                                onclick="toggleVisibility('loginPass', this)"><i class="bi bi-eye"></i>
+                            </button>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success w-100">Sign In</button>
@@ -48,17 +62,23 @@
                 <form action="/register" method="POST">
                     <div class="mb-2">
                         <label class="form-label small fw-bold">Full Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+                        <input type="text" name="name" class="form-control" 
+                            placeholder="Full Name" required>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small fw-bold">DLSU Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="tara_uy@dlsu.edu.ph" required>
+                        <input type="email" name="email" class="form-control" 
+                            placeholder="tara_uy@dlsu.edu.ph" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Create Password</label>
                         <div class="password-wrapper">
-                            <input type="password" id="regPass" name="password" class="form-control" placeholder="••••••••" required>
-                            <button type="button" class="toggle-btn" onclick="toggleVisibility('regPass', this)"><i class="bi bi-eye"></i></button>
+                            <input type="password" id="regPass" name="password" 
+                                class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="toggle-btn" 
+                                onclick="toggleVisibility('regPass', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Create Account</button>
