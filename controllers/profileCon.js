@@ -17,13 +17,14 @@ exports.getProfile = async (req, res) => {
         const isSelf = (targetEmail === req.session.currentUser.email);
 
         res.render('profile', { 
-            title: "Profile", 
+            title: `${profileUser.name}'s Profile`, 
             // Send the calculated photoUrl to the view
             profileUser: { ...profileUser, photoUrl }, 
             reservations, 
             isSelf 
         });
     } catch (err) {
+        console.error(err);
         res.status(500).send("Error loading profile");
     }
 };
@@ -53,11 +54,13 @@ exports.updatePhoto = async (req, res) => {
 // Handle account deletion
 exports.deleteAccount = async (req, res) => {
     try {
+        const userId = req.session.currentUser._id;
         const email = req.session.currentUser.email;
+        await Reservation.deleteMany({ user: userId });
         await User.deleteOne({ email });
-        await Reservation.deleteMany({ user: req.session.currentUser._id });
         req.session.destroy(() => res.redirect('/login'));
     } catch (err) {
+        console.error(err);
         res.status(500).send("Error deleting account");
     }
 };
