@@ -111,6 +111,12 @@ app.get('/logout', authController.logout)
 // Dashboard
 app.get('/', checkAuth, labController.getDashboard)
 
+//About Page
+app.get('/about', (req, res) => {
+  res.render('about');
+});
+
+
 // Labs / Rooms
 app.get('/rooms', checkAuth, roomsController.getAvailability)
 app.get('/search', checkAuth, (req, res) => res.render('search', { title: 'Search Labs' }))
@@ -151,7 +157,3 @@ app.get('/api/labs', checkAuth, async (req, res) => {
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
-//For the About page 
-app.get('/about', (req, res) => {
-  res.render('about');
-});
