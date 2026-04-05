@@ -1,11 +1,12 @@
 // load-data.js
+require('dotenv').config()
 const mongoose    = require('mongoose')
 const User        = require('./models/user')
 const Reservation = require('./models/reservation')
 const Lab         = require('./models/lab')
 
 // Connect to your local MongoDB
-mongoose.connect('mongodb://localhost:27017/labOMine')
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB for seeding...'))
   .catch(err => console.error('Connection error:', err))
 
