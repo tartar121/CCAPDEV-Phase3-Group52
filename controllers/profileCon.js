@@ -45,15 +45,35 @@ exports.getProfile = async (req, res) => {
   }
 }
 
-// POST /profile/update-bio
+
 exports.updateBio = async (req, res) => {
   try {
-    await User.updateOne({ email: req.session.currentUser.email }, { bio: req.body.bio })
-    res.status(200).json({ success: true })
+    const { bio } = req.body;
+
+    // Validate lang
+    if (!bio) {
+      return res.status(400).json({ error: "Bio cannot be empty." });
+    }
+
+    if (bio.length > 200) {
+      return res.status(400).json({ error: "Bio must not exceed 200 characters." });
+    }
+
+    await User.updateOne(
+      { email: req.session.currentUser.email },
+      { bio }
+    );
+
+    res.status(200).json({ success: true });
+
   } catch (err) {
-    res.status(500).json({ error: 'Error updating bio.' })
+    console.error(err);
+    res.status(500).json({ error: 'Error updating bio.' });
   }
-}
+};
+
+
+
 
 // POST /profile/update-photo — file upload via multer
 exports.updatePhoto = async (req, res) => {
