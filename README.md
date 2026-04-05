@@ -45,6 +45,7 @@ npm start
 ### 6. Access the app: Open your browser and go to http://localhost:3000
 
 ## 🏗️ Architecture
+(Note: We're using the free tier of Render. Expect all uploaded profile photos to be gone upon redeployment)
 ### Deployment
 - The Node.js/Express server is hosted as a Render Web Service with the port dynamically assigned via process.env.PORT
 - The MongoDB database is hosted on MongoDB Atlas connected via the MONGO_URI environment variable configured in Render
@@ -57,7 +58,7 @@ npm start
 - `public/uploads/` - User-uploaded profile photos stored on the server via Multer
 
 ### API
-- The rooms page communicates with the backend via a JSON REST API (/api/reservations/*, /api/labs) using fetch()
+- The rooms page communicates with the backend via a JSON REST API (/api/reservations/*, /api/labs)
 
 ## ✅ Implemented Features
 - **User Account** — Register (student/faculty only), login with optional 3-week "Remember Me" session, logout
