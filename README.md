@@ -1,8 +1,8 @@
 # CCAPDEV-Phase3-Group52
-Task is to **Set up a live server** of our web application.
+Task is to **set up a live server** of our web application.
 
 ### Deliverables
-**zip file** containing **all files** for the machine project
+submit the **link** to the deployed web application via **AnimoSpace**
 
 ## 🚀 Project Overview
 Lab O' Mine is a computer laboratory reservation system for DLSU students and faculty. Built with an MVC architecture using Node.js, Express, Handlebars, and MongoDB, it replaces the previous localStorage prototype with a centralized database to ensure real-time data consistency across all users.
