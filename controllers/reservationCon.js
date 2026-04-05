@@ -161,6 +161,16 @@ exports.createReservation = async (req, res) => {
 
   try {
     const { labId, labCode, seats, date, timeRange, slotsArray, isAnonymous } = req.body
+
+    if (!date || !slotsArray || slotsArray.length === 0) { 
+      return res.status(400).json({ error: "Invalid reservation data." }); 
+    }
+
+    if (!seats || (Array.isArray(seats) && seats.length === 0)) {
+      return res.status(400).json({ error: "Please select at least one seat." });
+    }
+
+
     const lab = await resolveLabDoc(labId, labCode)
     if (!lab) return res.status(404).json({ error: 'Lab not found.' })
 
@@ -237,6 +247,8 @@ exports.createReservation = async (req, res) => {
     res.status(500).json({ error: 'Could not create reservation.' })
   }
 }
+
+
 
 // Edit existing reservation
 exports.updateReservation = async (req, res) => {
