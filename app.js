@@ -150,3 +150,8 @@ app.get('/api/labs', checkAuth, async (req, res) => {
 // Start server at port 3000
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+
+//For the About page 
+app.get('/about', (req, res) => {
+  res.render('about');
+});
