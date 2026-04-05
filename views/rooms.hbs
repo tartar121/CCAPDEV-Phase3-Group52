@@ -213,13 +213,13 @@
                 <h5 class="fw-bold mb-0">Review Reservation</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form id="reservation-form">
+            <form id="reservation-form" required>
                 <div class="modal-body">
-                    <input type="hidden" id="f_labId"    name="labId">
+                    <input type="hidden" id="f_labId"    name="labId" required>
                     <input type="hidden" id="f_labCode"  name="labCode">
-                    <input type="hidden" id="f_seats"    name="seats">
-                    <input type="hidden" id="f_date"     name="date">
-                    <input type="hidden" id="f_time"     name="time">
+                    <input type="hidden" id="f_seats"    name="seats" required>
+                    <input type="hidden" id="f_date"     name="date" required>
+                    <input type="hidden" id="f_time"     name="time" required>
                     <input type="hidden" id="f_slots"    name="slots">
                     <input type="hidden" id="f_resId"    name="reservation_id">
 
