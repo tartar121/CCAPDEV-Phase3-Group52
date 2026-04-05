@@ -6,6 +6,7 @@
             <a class="nav-link" href="/">Home</a>
             <a class="nav-link" href="/search">View Labs</a>
             <a class="nav-link" href="/profile">My Profile</a>
+            <a class="nav-link" href="/about">About</a>
             {{#if currentUser}}
                 {{#if (eq currentUser.role "technician")}}
                     <span class="badge bg-warning text-dark me-2">Technician</span>
@@ -15,3 +16,4 @@
         </div>
     </div>
 </nav>
+
