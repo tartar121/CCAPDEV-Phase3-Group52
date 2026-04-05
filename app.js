@@ -1,4 +1,6 @@
 // app.js
+require('dotenv').config();
+
 const express  = require('express')
 const exphbs   = require('express-handlebars')
 const mongoose = require('mongoose')
@@ -33,8 +35,8 @@ const roomsController = require('./controllers/roomsCon')
 const labController = require('./controllers/labCon')
 
 // Database Connection
-mongoose.connect('mongodb://localhost:27017/labOMine')
-  .then(() => console.log('Connected to MongoDB'))
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Connection error:', err))
 
 // Body parsers
@@ -43,12 +45,11 @@ app.use(express.json())
 
 // Setup Session
 app.use(session({
-    secret:            'labOMineSecretKey',
-    resave:            true,       // resave extends the cookie on each request
+    secret: process.env.SESSION_SECRET || 'labOMineSecretKey',
+    resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge:  null,             // default: browser session; overridden by remember me
-        secure:  false,
+        secure: false,
         httpOnly: true
     }
 }))
@@ -147,5 +148,5 @@ app.get('/api/labs', checkAuth, async (req, res) => {
 })
 
 // Start server at port 3000
-const PORT = 3000
-app.listen(PORT, () => console.log("Server running on http://localhost:3000"));
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
