@@ -34,7 +34,7 @@ Example:
 MONGO_URI=mongodb+srv://<username>:<password>@<your-cluster>.mongodb.net/<dbname>
 SESSION_SECRET=ItsASecretToolThatWillHelpUsLater
 ```
-### 4. Seed the Database: Run the data loader script to initialize users, labs, and sample reservations:
+### 4. Seed the Database (load-data): Run the data loader script to initialize users, labs, and sample reservations (Make sure you can see it relfected on your mongoDB):
 ```bash
 npm run seed
 ```
@@ -44,9 +44,52 @@ npm start
 ```
 ### 6. Access the app: Open your browser and go to http://localhost:3000
 
+## 🚀 How to Deploy using Render
+
+### 1. Deployment (Render)
+- Push the project to Github 
+- Make sure of the following:
+    - .env is not uploaded
+    - .gitignore includes .env
+
+### 2. Create a Web Service on render
+- Go to https://render.com
+- Click New -> Web Service
+- Connect your GitHub Repository (Make sure you either have access or make it public)
+
+### 3. Configure your Service
+| Setting           | Value         |
+| ----------------- | ------------- |
+| **Environment**   | Node          |
+| **Build Command** | `npm install` |
+| **Start Command** | `node app.js` |
+| **Branch**        | `main`        |
+
+### 4. Add Environment Variables 
+- Make sure to add it in the environment tab
+```bash
+MONGO_URI = your MongoDB Atlas connection string
+SESSION_SECRET = any secret string
+```
+
+### 5. Deploy
+- Click Create Web Service
+- Wait for build to finish
+
+### 6. Seed the Database
+- Especially since Render does NOT automatically seed your database.
+- Run it locally:
+```bash
+node load-data.js
+```
+- This will populate MongoDB Atlas with:
+    - Labs
+    - Users
+
 ## 🏗️ Architecture
 (Note: We're using the free tier of Render. Expect all uploaded profile photos to be gone upon redeployment)
-### Deployment
+
+## Deployment
 - The Node.js/Express server is hosted as a Render Web Service with the port dynamically assigned via process.env.PORT
 - The MongoDB database is hosted on MongoDB Atlas connected via the MONGO_URI environment variable configured in Render
 
