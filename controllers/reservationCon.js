@@ -381,7 +381,7 @@ exports.techReserve = async (req, res) => {
     const localeDate = new Date(date + 'T00:00:00')
       .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
-    const slots = [slotTime]
+    
     await Reservation.create({
       user:        req.session.currentUser._id,
       lab:         lab._id,
