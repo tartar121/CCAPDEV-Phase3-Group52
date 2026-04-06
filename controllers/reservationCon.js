@@ -357,7 +357,27 @@ exports.techReserve = async (req, res) => {
     const lab = await Lab.findOne({ $or: [{ labCode: room }, { name: room }] })
     if (!lab) return res.status(404).send('Lab not found.')
 
-    // Convert ISO date from form (YYYY-MM-DD) to locale string used in DB ("Mar 16, 2026")
+    // Prevent Past-Time Booking (Validation)
+    const now = new Date();
+    const selectedDateTime = new Date(date + 'T' + slotTime); 
+    if (selectedDateTime < now) {
+      return res.status(400).send('Error: You cannot create a walk-in for a time that has already passed.');
+    }
+
+    // Make 2 slots (1-hour duration)
+    // Assuming slotTime is the start time (e.g., "08:00"), calculate the second slot (e.g., "08:30")
+    const slots = [slotTime];
+    const [hours, minutes] = slotTime.split(':').map(Number);
+    let nextMinutes = minutes + 30;
+    let nextHours = hours;
+    if (nextMinutes >= 60) {
+      nextMinutes = 0;
+      nextHours += 1;
+    }
+    const secondSlot = `${nextHours.toString().padStart(2, '0')}:${nextMinutes.toString().padStart(2, '0')}`;
+    slots.push(secondSlot);
+    
+    // Convert ISO date from form (YYYY-MM-DD) to locale string used in DB (e.g., "Mar 16, 2026")
     const localeDate = new Date(date + 'T00:00:00')
       .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
