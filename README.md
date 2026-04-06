@@ -74,12 +74,12 @@ npm start
 ## 🔑 Demo Credentials
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| Technician (Admin) | admin@dlsu.edu.ph | admin |
-| Faculty | oliver.berris@dlsu.edu.ph | 123 |
-| Student | tara_uy@dlsu.edu.ph | 456 |
-| Student | ram_liwanag@dlsu.edu.ph | 789 |
-| Student | dale_balila@dlsu.edu.ph | abc |
-| Student | john_teoxon@dlsu.edu.ph | def |
+| Technician (Admin) | admin@dlsu.edu.ph | adminPowa |
+| Faculty | oliver.berris@dlsu.edu.ph | 123456 |
+| Student | tara_uy@dlsu.edu.ph | 456789 |
+| Student | ram_liwanag@dlsu.edu.ph | 789012 |
+| Student | dale_balila@dlsu.edu.ph | BigDawg |
+| Student | john_teoxon@dlsu.edu.ph | abcdef |
 
 ## 📁 Submission Guidelines
 - **File Format:** CCAPDEV-Phase3-Group52.zip
