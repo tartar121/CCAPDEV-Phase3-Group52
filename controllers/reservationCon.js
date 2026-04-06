@@ -34,6 +34,25 @@ function slotsToDisplayRange (slotLabels) {
   }
 }
 
+// Parse a 12-hour slot label like "08:00 AM" into total minutes since midnight
+function slotLabelToMins (label) {
+  const [timePart, meridiem] = label.trim().split(' ')
+  let [h, m] = timePart.split(':').map(Number)
+  if (meridiem === 'PM' && h !== 12) h += 12
+  if (meridiem === 'AM' && h === 12) h  = 0
+  return h * 60 + m
+}
+
+// Advance a 12-hour slot label by 30 minutes e.g. "08:00 AM" -> "08:30 AM"
+function addThirtyMins (label) {
+  let mins = slotLabelToMins(label) + 30
+  const h24 = Math.floor(mins / 60)
+  const m   = mins % 60
+  const meridiem = h24 >= 12 ? 'PM' : 'AM'
+  const h12  = h24 > 12 ? h24 - 12 : h24 === 0 ? 12 : h24
+  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${meridiem}`
+}
+
 // Resolve Lab from labId or labCode; Helps lookup for lab
 async function resolveLabDoc (labId, labCode) {
   if (labId) return Lab.findById(labId)
@@ -358,24 +377,21 @@ exports.techReserve = async (req, res) => {
     if (!lab) return res.status(404).send('Lab not found.')
 
     // Prevent Past-Time Booking (Validation)
-    const now = new Date();
-    const selectedDateTime = new Date(date + 'T' + slotTime); 
-    if (selectedDateTime < now) {
-      return res.status(400).send('Error: You cannot create a walk-in for a time that has already passed.');
+    const now = new Date()
+    const todayISO = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+    const isToday  = date === todayISO
+    const slotStartMins = slotLabelToMins(slotTime)
+    
+    if (isToday) {
+      const nowMins = now.getHours() * 60 + now.getMinutes()
+    if (slotStartMins + 30 <= nowMins) {
+      return res.status(400).send('Error: You cannot create a walk-in for a time slot that has already passed.')
+      }
     }
 
     // Make 2 slots (1-hour duration)
     // Assuming slotTime is the start time (e.g., "08:00"), calculate the second slot (e.g., "08:30")
-    const slots = [slotTime];
-    const [hours, minutes] = slotTime.split(':').map(Number);
-    let nextMinutes = minutes + 30;
-    let nextHours = hours;
-    if (nextMinutes >= 60) {
-      nextMinutes = 0;
-      nextHours += 1;
-    }
-    const secondSlot = `${nextHours.toString().padStart(2, '0')}:${nextMinutes.toString().padStart(2, '0')}`;
-    slots.push(secondSlot);
+    const slots = [slotTime, addThirtyMins(slotTime)]
     
     // Convert ISO date from form (YYYY-MM-DD) to locale string used in DB (e.g., "Mar 16, 2026")
     const localeDate = new Date(date + 'T00:00:00')
