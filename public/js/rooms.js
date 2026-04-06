@@ -708,6 +708,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('reservation-form')
     .addEventListener('submit', e => { e.preventDefault(); saveReservation() })
 
+  // Safer if you have a specific ID for the date input
+  const techDateInput = document.getElementById('reserveDate'); 
+  if (techDateInput) {
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+  
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    techDateInput.min = formatDate(today);
+    techDateInput.max = formatDate(nextWeek);
+  }
+  
   // If ?edit=<id> is in the URL, auto-open the picker for editing
   const urlParams   = new URLSearchParams(window.location.search)
   const editId      = urlParams.get('edit')
