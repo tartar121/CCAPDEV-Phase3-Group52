@@ -34,7 +34,7 @@ Example:
 MONGO_URI=mongodb+srv://<username>:<password>@<your-cluster>.mongodb.net/<dbname>
 SESSION_SECRET=ItsASecretToolThatWillHelpUsLater
 ```
-### 4. Seed the Database (load-data): Run the data loader script to initialize users, labs, and sample reservations (Make sure you can see it relfected on your mongoDB):
+### 4. Seed the Database (load-data): Run the data loader script to initialize users, labs, and sample reservations (Make sure you can see it reflected on your mongoDB):
 ```bash
 npm run seed
 ```
@@ -125,7 +125,7 @@ node load-data.js
 | Student | john_teoxon@dlsu.edu.ph | abcdef |
 
 ## 📁 Submission Guidelines
-- **File Format:** CCAPDEV-Phase3-Group52.zip
+- **File Format:** Link to the deployed web application 
 - **Collaboration:** Students collaborated through the group's GitHub repository.
 
 ## 📋 Members
