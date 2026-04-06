@@ -139,9 +139,9 @@ exports.getAvailability = async (req, res) => {
           seatsLeft,
           isFaculty:       firstRes?.userRole === 'faculty',
           isTechnician:    firstRes?.userRole === 'technician',
-          isAnonymous:     firstRes?.isAnonymous || false,
+          isAnonymous:     firstRes?.isAnonymous === true,
           reservationId:   firstRes?._id || null,
-          reserveeName:    (firstRes && !firstRes.isAnonymous && firstRes.user) ? firstRes.user.name : null,
+          reserveeName:    (firstRes && !firstRes.isAnonymous !== true && firstRes.user) ? firstRes.user.name : null,
           seatNumbers:     firstRes ? (Array.isArray(firstRes.seatNumber) ? firstRes.seatNumber.join(', ') : firstRes.seatNumber) : null
         }
       })
