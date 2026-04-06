@@ -1,6 +1,7 @@
 // load-data.js
 require('dotenv').config()
 const mongoose    = require('mongoose')
+const bcrypt      = require('bcrypt')  
 const User        = require('./models/user')
 const Reservation = require('./models/reservation')
 const Lab         = require('./models/lab')
