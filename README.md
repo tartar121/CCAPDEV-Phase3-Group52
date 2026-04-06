@@ -47,7 +47,7 @@ npm start
 ## 🚀 How to Deploy using Render
 
 ### 1. Deployment (Render)
-- Push the project to Github 
+- Push the project to GitHub 
 - Make sure of the following:
     - .env is not uploaded
     - .gitignore includes .env
