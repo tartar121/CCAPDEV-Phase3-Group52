@@ -103,12 +103,12 @@ async function seed() {
 
         // 2. Insert Users (role stored explicitly - no email-checking)
         const users = await User.insertMany([
-            { name: 'Oliver Berris', email: 'oliver.berris@dlsu.edu.ph', password: '123',   role: 'faculty',     bio: "Computer Science Faculty member who loves teaching." },
-            { name: 'Tara Uy',       email: 'tara_uy@dlsu.edu.ph',       password: '456',   role: 'student',     bio: "Avid Gamer and Persona Series Lover." },
-            { name: 'Ram Liwanag',   email: 'ram_liwanag@dlsu.edu.ph',   password: '789',   role: 'student',     bio: "Loves technology, programming, and playing Honkai: Star Rail." },
-            { name: 'Dale Balila',   email: 'dale_balila@dlsu.edu.ph',   password: 'abc',   role: 'student',     bio: "CCS Student and part-time sleeper." },
-            { name: 'John Teoxon',   email: 'john_teoxon@dlsu.edu.ph',   password: 'def',   role: 'student',     bio: "Enjoys watching movies and exploring new cafes around the city." },
-            { name: 'Admin Account', email: 'admin@dlsu.edu.ph',         password: 'admin', role: 'technician',  bio: "Lab Technician" }
+            { name: 'Oliver Berris', email: 'oliver.berris@dlsu.edu.ph', password: '123456',   role: 'faculty',     bio: "Computer Science Faculty member who loves teaching." },
+            { name: 'Tara Uy',       email: 'tara_uy@dlsu.edu.ph',       password: '456789',   role: 'student',     bio: "Avid Gamer and Persona Series Lover." },
+            { name: 'Ram Liwanag',   email: 'ram_liwanag@dlsu.edu.ph',   password: '789012',   role: 'student',     bio: "Loves technology, programming, and playing Honkai: Star Rail." },
+            { name: 'Dale Balila',   email: 'dale_vernard_r_balila@dlsu.edu.ph',   password: 'BigDawg',   role: 'student',     bio: "CCS Student and part-time sleeper." },
+            { name: 'John Teoxon',   email: 'john_teoxon@dlsu.edu.ph',   password: 'abcdef',   role: 'student',     bio: "Enjoys watching movies and exploring new cafes around the city." },
+            { name: 'Admin Account', email: 'admin@dlsu.edu.ph',         password: 'adminPowa', role: 'technician',  bio: "Lab Technician" }
         ])
         const um = Object.fromEntries(users.map(u => [u.email, u]))
         console.log("Users seeded.")
@@ -122,14 +122,14 @@ async function seed() {
             // Day 1 — tomorrow
             resDoc({ userId: um['oliver.berris@dlsu.edu.ph']._id, labId: lm.GK302._id,  labCode: 'GK302',  seats: [5],      date: day1, slots: makeSlots(8, 30, 2),  userRole: 'faculty' }),
             resDoc({ userId: um['tara_uy@dlsu.edu.ph']._id,       labId: lm.VL211._id,  labCode: 'VL211',  seats: [12],     date: day1, slots: makeSlots(10, 0, 2),  isAnonymous: true }),
-            resDoc({ userId: um['dale_balila@dlsu.edu.ph']._id,   labId: lm.GK306._id,  labCode: 'GK306',  seats: [3],      date: day1, slots: makeSlots(9, 30, 2) }),
+            resDoc({ userId: um['dale_vernard_r_balila@dlsu.edu.ph']._id,   labId: lm.GK306._id,  labCode: 'GK306',  seats: [3],      date: day1, slots: makeSlots(9, 30, 2) }),
             resDoc({ userId: um['john_teoxon@dlsu.edu.ph']._id,   labId: lm.AG1904._id, labCode: 'AG1904', seats: [20],     date: day1, slots: makeSlots(8, 0, 2) }),
             // Day 1 — multiple seats to demo seat grid variety
             resDoc({ userId: um['tara_uy@dlsu.edu.ph']._id,       labId: lm.GK302._id,  labCode: 'GK302',  seats: [15,16],  date: day1, slots: makeSlots(14, 0, 3) }),
             resDoc({ userId: um['ram_liwanag@dlsu.edu.ph']._id,   labId: lm.AG1401._id, labCode: 'AG1401', seats: [7,8],    date: day1, slots: makeSlots(12, 30, 2) }),
             // Day 2
             resDoc({ userId: um['ram_liwanag@dlsu.edu.ph']._id,   labId: lm.GK306._id,  labCode: 'GK306',  seats: [8],      date: day2, slots: makeSlots(10, 0, 4) }),
-            resDoc({ userId: um['dale_balila@dlsu.edu.ph']._id,   labId: lm.GK302._id,  labCode: 'GK302',  seats: [22,23],  date: day2, slots: makeSlots(9, 0, 2) }),
+            resDoc({ userId: um['dale_vernard_r_balila@dlsu.edu.ph']._id,   labId: lm.GK302._id,  labCode: 'GK302',  seats: [22,23],  date: day2, slots: makeSlots(9, 0, 2) }),
             resDoc({ userId: um['john_teoxon@dlsu.edu.ph']._id,   labId: lm.VL211._id,  labCode: 'VL211',  seats: [5,6,7],  date: day2, slots: makeSlots(13, 0, 2) }),
             // Day 3
             resDoc({ userId: um['oliver.berris@dlsu.edu.ph']._id, labId: lm.AG1904._id, labCode: 'AG1904', seats: [10,11],  date: day3, slots: makeSlots(8, 0, 4),   userRole: 'faculty' }),
@@ -139,9 +139,9 @@ async function seed() {
         
         console.log("\n Database seeded successfully!")
         console.log("Demo credentials:")
-        console.log("  Technician : admin@dlsu.edu.ph        / admin")
-        console.log("  Faculty    : oliver.berris@dlsu.edu.ph / 123")
-        console.log("  Student    : tara_uy@dlsu.edu.ph       / 456")
+        console.log("  Technician : admin@dlsu.edu.ph        / adminPowa")
+        console.log("  Faculty    : oliver.berris@dlsu.edu.ph / 123456")
+        console.log("  Student    : tara_uy@dlsu.edu.ph       / 456789")
     } catch (err) {
         console.error("Seeding error:", err)
     } finally {
